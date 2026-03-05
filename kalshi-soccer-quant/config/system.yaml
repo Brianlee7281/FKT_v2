@@ -1,0 +1,66 @@
+# Trading mode
+trading_mode: "paper"  # "paper" or "live"
+
+# Goalserve
+goalserve:
+  live_score_poll_interval: 3  # seconds
+  live_odds_ws_url: "wss://goalserve.com/liveodds"
+  base_url: "http://www.goalserve.com/getfeed"
+
+# Kalshi
+kalshi:
+  ws_url: "wss://trading-api.kalshi.com/trade-api/ws/v2"
+  rest_url: "https://trading-api.kalshi.com/trade-api/v2"
+
+# Risk parameters
+risk:
+  f_order_cap: 0.03
+  f_match_cap: 0.05
+  f_total_cap: 0.20
+  initial_bankroll: 5000  # for PAPER mode
+
+# Trading parameters (adaptive update targets)
+trading:
+  K_frac: 0.25
+  z: 1.645
+  theta_entry: 0.02
+  theta_exit: 0.005
+  cooldown_seconds: 15
+  low_confidence_multiplier: 0.5
+  rapid_entry_enabled: false
+  bet365_divergence_auto_exit: false
+
+# Infrastructure
+redis:
+  url: "redis://localhost:6379/0"
+postgres:
+  url: "postgresql://kalshi:${DB_PASSWORD}@localhost:5432/kalshi"
+
+# Alerts
+alerts:
+  slack_webhook: "${SLACK_WEBHOOK_URL}"
+  telegram_bot_token: "${TELEGRAM_BOT_TOKEN}"
+  telegram_chat_id: "${TELEGRAM_CHAT_ID}"
+
+# Target leagues (Goalserve league IDs)
+target_leagues:
+  - "1204"  # EPL
+  - "1399"  # La Liga
+  - "1229"  # Bundesliga
+  - "1269"  # Serie A
+  - "1221"  # Ligue 1
+
+# Target markets
+active_markets:
+  - "over_25"
+  - "home_win"
+  - "away_win"
+  - "btts"
+
+# Monte Carlo
+mc:
+  N: 50000
+  executor_workers: 4
+
+# Fee
+fee_rate: 0.07
