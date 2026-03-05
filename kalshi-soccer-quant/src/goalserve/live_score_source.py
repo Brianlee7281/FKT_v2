@@ -122,6 +122,15 @@ class GoalserveLiveScoreSource(EventSource):
                     log.error("live_score_unexpected_error", error=str(e))
                     self._consecutive_failures += 1
 
+                    if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                        yield NormalizedEvent(
+                            type="source_failure",
+                            source="live_score",
+                            confidence="confirmed",
+                            timestamp=time.time(),
+                        )
+                        break
+
                 await asyncio.sleep(self._poll_interval)
 
     # -----------------------------------------------------------------------
@@ -350,6 +359,10 @@ def _parse_minute_str(minute_str: str) -> float | None:
     if not minute_str:
         return None
     try:
+        # Handle stoppage-time format: "45+2", "90+3"
+        if "+" in str(minute_str):
+            parts = str(minute_str).split("+")
+            return float(parts[0]) + float(parts[1])
         return float(minute_str)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, IndexError):
         return None

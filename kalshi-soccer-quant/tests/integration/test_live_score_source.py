@@ -270,3 +270,57 @@ class TestVarCancelledField:
 
         finished_events = [e for e in events if e.type == "match_finished"]
         assert len(finished_events) == 1
+
+
+class TestStoppageTimeMinuteParsing:
+    """test_stoppage_time_minute_parsing"""
+
+    @pytest.mark.asyncio
+    async def test_stoppage_time_format_parsed(self):
+        """Timer '45+2' should parse to 47.0 minute."""
+        source = GoalserveLiveScoreSource("test_key", "12345")
+        source._last_home_goals = 0
+        source._last_away_goals = 0
+
+        match = _make_match_data(
+            home_goals=1, away_goals=0, timer="45+2",
+        )
+
+        events = await _collect_diff_events(source, match)
+
+        goal_events = [e for e in events if e.type == "goal_confirmed"]
+        assert len(goal_events) == 1
+        assert goal_events[0].minute == 47.0
+
+    @pytest.mark.asyncio
+    async def test_regular_minute_parsed(self):
+        """Timer '30' should parse to 30.0 minute."""
+        source = GoalserveLiveScoreSource("test_key", "12345")
+        source._last_home_goals = 0
+        source._last_away_goals = 0
+
+        match = _make_match_data(
+            home_goals=1, away_goals=0, timer="30",
+        )
+
+        events = await _collect_diff_events(source, match)
+
+        goal_events = [e for e in events if e.type == "goal_confirmed"]
+        assert len(goal_events) == 1
+        assert goal_events[0].minute == 30.0
+
+    @pytest.mark.asyncio
+    async def test_second_half_stoppage_parsed(self):
+        """Timer '90+3' should parse to 93.0 minute."""
+        source = GoalserveLiveScoreSource("test_key", "12345")
+        source._last_home_goals = 0
+        source._last_away_goals = 0
+
+        match = _make_match_data(
+            home_goals=1, away_goals=0, timer="90+3",
+        )
+
+        events = await _collect_diff_events(source, match)
+
+        goal_events = [e for e in events if e.type == "goal_confirmed"]
+        assert goal_events[0].minute == 93.0

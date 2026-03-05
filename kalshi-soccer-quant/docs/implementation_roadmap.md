@@ -780,22 +780,9 @@ Build `src/alerts/main.py`:
 
 Test with real Slack webhook.
 
-### Step 5.4: Dashboard (Minimal)
+### Step 5.4: Dashboard
 
-Build the Phase 0 essentials:
-
-```
-Must-have:
-├── 1B: PriceChart.jsx      ← P_true vs P_kalshi vs P_bet365 (THE key chart)
-├── 1A: MatchHeader.jsx      ← Score, minute, event_state
-├── 1D: SignalPanel.jsx      ← Signals + paper positions
-├── 1E: EventLog.jsx         ← Real-time events
-├── 2B: PositionTable.jsx    ← Paper positions
-└── 2C: PnLTimeline.jsx      ← Paper P&L
-```
-
-Backend: FastAPI + WebSocket → Redis subscriber.
-Frontend: React + Recharts.
+Look at the dashboard_implementation_roadmap.md and dashboard_design.md
 
 ### Step 5.5: systemd Services
 
