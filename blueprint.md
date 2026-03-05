@@ -1,141 +1,141 @@
 # Implementation Blueprint — 24/7 Automated System
 
-## 개요
+## Overview
 
-킨 순간부터 24/7 자동으로 돌아가는 Kalshi 축구 퀀트 자동트레이딩 시스템의 구현 청사진.
+This is the implementation blueprint for a Kalshi soccer quant auto-trading system that runs 24/7 from the moment it is turned on.
 
-사람의 개입 없이:
-- 매일 경기 스케줄을 스캔하고
-- 킥오프 60분 전에 자동으로 Pre-Match를 실행하고
-- 경기 중 실시간으로 트레이딩하고
-- 경기 종료 후 자동 정산 + 사후 분석하고
-- 주기적으로 모델을 재학습하고
-- 장애 시 자동 복구한다
+Without human intervention, it will:
+- scan daily match schedules,
+- automatically run Pre-Match 60 minutes before kickoff,
+- trade in real time during matches,
+- auto-settle and run post-match analytics,
+- periodically retrain the model,
+- and self-recover from failures.
 
-### 설계 원칙
+### Design Principles
 
-1. **무인 운영 (Lights-Out):** 정상 상태에서 사람의 개입 불필요
-2. **Graceful Degradation:** 부분 장애 시 안전하게 축소 운영
-3. **Self-Healing:** 일시적 장애는 자동 복구
-4. **Observable:** 모든 상태가 대시보드 + 알림으로 가시화
-5. **Auditable:** 모든 결정과 거래가 영구 기록
+1. **Lights-Out Operations:** No human intervention required under normal conditions.
+2. **Graceful Degradation:** Safely scale down operations under partial failures.
+3. **Self-Healing:** Automatically recover from transient failures.
+4. **Observable:** Make all states visible via dashboards + alerts.
+5. **Auditable:** Permanently record all decisions and trades.
 
 ---
 
-## 시스템 아키텍처
+## System Architecture
 
-### 프로세스 구조 — 5개 상시 프로세스 + 2개 주기 프로세스
+### Process Topology — 5 Always-On Processes + 2 Periodic Processes
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Single Server (VPS)                          │
+│                        Single Server (VPS)                         │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  Process 1: SCHEDULER (항상 실행)                             │   │
-│  │  • 매일 경기 스케줄 스캔 → 경기별 Job 생성                     │   │
-│  │  • 킥오프 60분 전: MatchEngine 인스턴스 스폰                  │   │
-│  │  • 킥오프 후: MatchEngine 상태 모니터링                       │   │
-│  │  • 경기 종료 후: 정산 + 사후 분석 트리거                      │   │
+│  │  Process 1: SCHEDULER (always running)                      │   │
+│  │  • Scan daily fixtures → create per-match jobs              │   │
+│  │  • 60 min before kickoff: spawn MatchEngine instance        │   │
+│  │  • After kickoff: monitor MatchEngine state                 │   │
+│  │  • After match end: trigger settlement + post-analysis      │   │
 │  └─────────────────────────┬───────────────────────────────────┘   │
 │                            │ spawn/monitor                         │
 │  ┌─────────────────────────▼───────────────────────────────────┐   │
-│  │  Process 2~N: MATCH_ENGINE (경기당 1개, 동적 스폰)            │   │
-│  │  • Phase 2 (Pre-Match) → Phase 3 (Live) → Phase 4 (Exec)   │   │
-│  │  • 3개 asyncio 코루틴: tick_loop + live_odds + live_score    │   │
-│  │  • 경기 종료 시 자동 소멸                                     │   │
+│  │  Process 2~N: MATCH_ENGINE (1 per match, dynamic spawn)     │   │
+│  │  • Phase 2 (Pre-Match) → Phase 3 (Live) → Phase 4 (Exec)    │   │
+│  │  • 3 asyncio coroutines: tick_loop + live_odds + live_score │   │
+│  │  • Auto-terminate at match end                              │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  Process N+1: DASHBOARD_SERVER (항상 실행)                    │   │
-│  │  • FastAPI + WebSocket → React 프론트엔드 서빙               │   │
-│  │  • Redis에서 실시간 데이터 구독 → 브라우저로 Push             │   │
-│  │  • PostgreSQL에서 분석 데이터 쿼리                            │   │
+│  │  Process N+1: DASHBOARD_SERVER (always running)             │   │
+│  │  • FastAPI + WebSocket → serve React frontend               │   │
+│  │  • Subscribe to Redis real-time data → push to browser      │   │
+│  │  • Query analytics data from PostgreSQL                     │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  Process N+2: ALERT_SERVICE (항상 실행)                       │   │
-│  │  • Redis에서 이벤트 구독 → Slack/Telegram 발송               │   │
-│  │  • 시스템 건강 모니터링 (프로세스 생존, 메모리, CPU)            │   │
+│  │  Process N+2: ALERT_SERVICE (always running)                │   │
+│  │  • Subscribe to Redis events → send Slack/Telegram alerts   │   │
+│  │  • System health monitoring (process liveness, RAM, CPU)    │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────┐   │
-│  │  Process N+3: DATA_COLLECTOR (항상 실행)                      │   │
-│  │  • Goalserve Fixtures/Results + Live Game Stats 수집         │   │
-│  │  • 과거 경기 데이터 DB 적재 (Phase 1 학습용)                  │   │
-│  │  • Pregame Odds 수집 + 아카이브                              │   │
+│  │  Process N+3: DATA_COLLECTOR (always running)               │   │
+│  │  • Collect Goalserve Fixtures/Results + Live Game Stats     │   │
+│  │  • Load historical match data into DB (for Phase 1)         │   │
+│  │  • Collect and archive pregame odds                         │   │
 │  └─────────────────────────────────────────────────────────────┘   │
 │                                                                     │
-│  ┌─────────────── 주기 프로세스 ────────────────────────────────┐   │
-│  │  CRON 1: RECALIBRATION (트리거 시 또는 시즌 시작)             │   │
-│  │  • Phase 1 전체 재실행 (Step 1.1~1.5)                       │   │
-│  │  • 새 프로덕션 파라미터 생성 → hot-reload                    │   │
+│  ┌─────────────── Periodic Processes ──────────────────────────┐   │
+│  │  CRON 1: RECALIBRATION (on trigger or season start)         │   │
+│  │  • Re-run full Phase 1 (Step 1.1~1.5)                       │   │
+│  │  • Generate new production parameters → hot-reload          │   │
 │  │                                                              │   │
-│  │  CRON 2: ANALYTICS_DAILY (매일 자정)                         │   │
-│  │  • Step 4.6 사후 분석 집계                                   │   │
-│  │  • 적응적 파라미터 조정                                       │   │
-│  │  • 일일 리포트 생성 + Slack 발송                              │   │
+│  │  CRON 2: ANALYTICS_DAILY (daily at midnight)                │   │
+│  │  • Aggregate Step 4.6 post-match analytics                  │   │
+│  │  • Adaptive parameter updates                               │   │
+│  │  • Generate daily report + send to Slack                    │   │
 │  └──────────────────────────────────────────────────────────────┘   │
 │                                                                     │
-│  ┌─────────── 인프라 ──────────────────────────────────────────┐   │
-│  │  Redis          │  PostgreSQL + TimescaleDB                  │   │
-│  │  (실시간 메시지) │  (영구 저장)                                │   │
+│  ┌─────────── Infrastructure ──────────────────────────────────┐   │
+│  │  Redis          │  PostgreSQL + TimescaleDB                 │   │
+│  │  (real-time bus)│  (persistent storage)                     │   │
 │  └──────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### 24시간 타임라인 — 자동 운영 흐름
+### 24-Hour Timeline — Automated Operating Flow
 
 ```
-00:00 ─── ANALYTICS_DAILY 실행
-│         • 전날 정산 완료 경기 사후 분석
-│         • 적응적 파라미터 조정
-│         • 일일 리포트 Slack 발송
+00:00 ─── ANALYTICS_DAILY runs
+│         • Post-analysis for prior day settled matches
+│         • Adaptive parameter updates
+│         • Daily report sent to Slack
 │
-06:00 ─── SCHEDULER: 오늘 경기 스캔
-│         • Goalserve Fixtures에서 오늘 날짜 경기 목록 수집
-│         • 각 경기의 킥오프 시간 파악
-│         • DB에 match_jobs 테이블 생성
+06:00 ─── SCHEDULER: scan today’s matches
+│         • Fetch today’s fixtures from Goalserve
+│         • Identify kickoff times
+│         • Create `match_jobs` records in DB
 │
-(예: 킥오프 12:30 경기)
-11:30 ─── SCHEDULER: MatchEngine 스폰 (킥오프 60분 전)
-│         • Phase 2 Step 2.1~2.5 자동 실행
-│         • Sanity Check → GO/HOLD/SKIP 자동 판정
-│         • GO이면 대기, SKIP이면 엔진 소멸
+(example: kickoff at 12:30)
+11:30 ─── SCHEDULER: spawn MatchEngine (60 min pre-kickoff)
+│         • Auto-run Phase 2 Step 2.1~2.5
+│         • Sanity Check → auto verdict GO/HOLD/SKIP
+│         • If GO, wait; if SKIP, terminate engine
 │
-12:25 ─── Pre-Kickoff 최종 확인 (킥오프 5분 전)
-│         • 라인업 재확인
-│         • 연결 상태 확인
+12:25 ─── Final pre-kickoff check (5 min pre-kickoff)
+│         • Re-check lineup
+│         • Verify connectivity
 │
-12:30 ─── Phase 3 시작: Live Trading Engine
-│         • 3-Layer 감지 활성화
-│         • 매 1초 틱 루프
-│         • 골/레드카드 이벤트 처리
-│         • Phase 4 시그널 → 주문 전송
+12:30 ─── Phase 3 starts: Live Trading Engine
+│         • 3-Layer detection enabled
+│         • 1-second tick loop
+│         • Process goal/red-card events
+│         • Phase 4 signal generation → order submission
 │
-14:15 ─── 경기 종료 (예상)
-│         • Goalserve status "Finished" 감지
-│         • 잔여 포지션 만기 정산 대기
-│         • Kalshi 정산 결과 수신
+14:15 ─── Match ends (expected)
+│         • Detect Goalserve status "Finished"
+│         • Wait for expiry settlement of remaining positions
+│         • Receive Kalshi settlement result
 │
-14:20 ─── MatchEngine 정리
-│         • 거래 로그 PostgreSQL 최종 기록
-│         • Redis에서 해당 경기 데이터 TTL 설정
-│         • MatchEngine 프로세스 소멸
+14:20 ─── MatchEngine cleanup
+│         • Final trade logs written to PostgreSQL
+│         • Set Redis TTL for match data
+│         • Terminate MatchEngine process
 │
-(다음 경기들도 동일한 사이클)
+(same cycle for subsequent matches)
 │
-24:00 ─── ANALYTICS_DAILY 다시 실행 (하루 마감)
+24:00 ─── ANALYTICS_DAILY runs again (day close)
 ```
 
 ---
 
-## Process 1: SCHEDULER — 자동 스케줄링 엔진
+## Process 1: SCHEDULER — Automated Scheduling Engine
 
-### 역할
+### Role
 
-매일 경기 스케줄을 스캔하고, 킥오프 시간에 맞춰 MatchEngine을 자동으로 스폰/관리한다.
+Scans daily fixtures and automatically spawns/manages MatchEngines according to kickoff times.
 
-### 구현
+### Implementation
 
 ```python
 # src/scheduler/main.py
@@ -146,7 +146,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 class MatchScheduler:
     """
-    24/7 실행. 매일 경기 스캔 → 킥오프 전 MatchEngine 스폰.
+    Runs 24/7. Scans daily fixtures → spawns MatchEngine before kickoff.
     """
     def __init__(self, config: SystemConfig):
         self.config = config
@@ -157,20 +157,20 @@ class MatchScheduler:
         self.alerter = AlertService(config.alert_config)
 
     async def start(self):
-        """시스템 시작점"""
-        # 1. 매일 06:00 UTC — 오늘 경기 스캔
+        """System entry point"""
+        # 1. Daily 06:00 UTC — scan today’s fixtures
         self.scheduler.add_job(
             self.scan_today_matches,
             'cron', hour=6, minute=0
         )
 
-        # 2. 매 5분 — 스케줄 갱신 (경기 시간 변경, 연기 감지)
+        # 2. Every 5 minutes — refresh schedule (time changes, postponements)
         self.scheduler.add_job(
             self.refresh_schedule,
             'interval', minutes=5
         )
 
-        # 3. 매 10초 — 엔진 건강 모니터링
+        # 3. Every 10 seconds — engine health monitoring
         self.scheduler.add_job(
             self.monitor_engines,
             'interval', seconds=10
@@ -178,15 +178,15 @@ class MatchScheduler:
 
         self.scheduler.start()
 
-        # 시작 시 즉시 오늘 경기 스캔
+        # Immediate scan at startup
         await self.scan_today_matches()
 
-        # 무한 대기
+        # Infinite loop
         while True:
             await asyncio.sleep(1)
 
     async def scan_today_matches(self):
-        """Goalserve Fixtures에서 오늘 경기 목록 수집"""
+        """Collect today’s fixtures from Goalserve Fixtures"""
         today = datetime.utcnow().strftime("%d.%m.%Y")
 
         for league_id in self.config.target_leagues:
@@ -196,7 +196,7 @@ class MatchScheduler:
                 kickoff = parse_kickoff_time(match)
                 match_id = match["id"]
 
-                # DB에 저장
+                # Persist to DB
                 await self.db.upsert_match_job(
                     match_id=match_id,
                     league_id=league_id,
@@ -206,7 +206,7 @@ class MatchScheduler:
                     status="SCHEDULED"
                 )
 
-                # 킥오프 60분 전에 엔진 스폰 예약
+                # Schedule engine spawn 60 minutes before kickoff
                 spawn_time = kickoff - timedelta(minutes=60)
                 if spawn_time > datetime.utcnow():
                     self.scheduler.add_job(
@@ -221,15 +221,15 @@ class MatchScheduler:
         log.info(f"Scanned {today}: {len(fixtures)} matches scheduled")
 
     async def spawn_engine(self, match_id: str):
-        """MatchEngine 인스턴스 생성 + Phase 2 실행"""
+        """Create MatchEngine instance + run Phase 2"""
         if match_id in self.active_engines:
-            return  # 이미 실행 중
+            return  # already running
 
         try:
             engine = MatchEngine(match_id, self.config)
             self.active_engines[match_id] = engine
 
-            # Phase 2 실행 (Pre-Match Initialization)
+            # Run Phase 2 (Pre-Match Initialization)
             result = await engine.run_prematch()
 
             if result.verdict == "SKIP":
@@ -244,7 +244,7 @@ class MatchScheduler:
                     f"Match {match_id} on HOLD — manual review needed"
                 )
 
-            # 킥오프 대기 → Phase 3+4 자동 시작
+            # Wait for kickoff → auto-start Phase 3+4
             asyncio.create_task(engine.run_live())
 
             await self.db.update_match_status(match_id, "LIVE")
@@ -255,14 +255,14 @@ class MatchScheduler:
             await self.alerter.send("CRITICAL", f"Engine spawn failed: {match_id}\n{e}")
 
     async def monitor_engines(self):
-        """활성 엔진 건강 모니터링"""
+        """Monitor health of active engines"""
         for match_id, engine in list(self.active_engines.items()):
-            # 경기 종료 확인
+            # Check match end
             if engine.is_finished():
                 await self.handle_match_finished(match_id, engine)
                 continue
 
-            # 건강 체크
+            # Health check
             if not engine.is_healthy():
                 await self.alerter.send(
                     "CRITICAL",
@@ -270,21 +270,21 @@ class MatchScheduler:
                 )
 
     async def handle_match_finished(self, match_id: str, engine: MatchEngine):
-        """경기 종료 후 정리"""
-        # 1. 최종 거래 로그 기록
+        """Cleanup after match end"""
+        # 1. Final trade logs
         await engine.finalize_logs()
 
-        # 2. 사후 분석 예약 (즉시 또는 배치)
+        # 2. Schedule post-analysis (immediate or batch)
         await self.db.update_match_status(match_id, "FINISHED")
 
-        # 3. 엔진 소멸
+        # 3. Engine teardown
         await engine.shutdown()
         del self.active_engines[match_id]
 
         log.info(f"Engine for {match_id} shut down after match end")
 ```
 
-### 대상 리그 설정
+### Target League Configuration
 
 ```python
 # config/leagues.yaml
@@ -305,36 +305,36 @@ target_leagues:
     name: "Ligue 1"
     priority: 2
 
-# Kalshi에서 거래 가능한 리그만 포함.
-# 리그 추가 시 Phase 1 재학습 필요.
+# Include only leagues tradable on Kalshi.
+# Adding a new league requires Phase 1 retraining.
 ```
 
 ---
 
-## Process 2~N: MATCH_ENGINE — 경기별 트레이딩 엔진
+## Process 2~N: MATCH_ENGINE — Per-Match Trading Engine
 
-### 역할
+### Role
 
-단일 경기의 전체 라이프사이클 (Phase 2 → 3 → 4 → 정산)을 관리한다.
+Manages the full lifecycle of a single match (Phase 2 → 3 → 4 → settlement).
 
-### 생명주기
+### Lifecycle
 
 ```
-SPAWNED ──(Phase 2)──▶ PREMATCH_READY ──(킥오프)──▶ LIVE
+SPAWNED ──(Phase 2)──▶ PREMATCH_READY ──(kickoff)──▶ LIVE
     │                       │                          │
     │                    SKIPPED                   FINISHED
-    │                  (sanity fail)                    │
+    │                 (sanity failed)                  │
     └──────────────────────────────────────────────── SHUTDOWN
 ```
 
-### 구현
+### Implementation
 
 ```python
 # src/engine/match_engine.py
 
 class MatchEngine:
     """
-    경기당 1개 인스턴스. Phase 2~4의 전체 파이프라인을 관리.
+    One instance per match. Manages the full Phase 2~4 pipeline.
     """
     def __init__(self, match_id: str, config: SystemConfig):
         self.match_id = match_id
@@ -342,11 +342,11 @@ class MatchEngine:
         self.model = None  # LiveFootballQuantModel
         self.state = "SPAWNED"
 
-        # 인프라 연결
+        # Infrastructure connections
         self.redis = RedisClient(config.redis_url)
         self.db = PostgresClient(config.db_url)
 
-        # Goalserve 소스
+        # Goalserve sources
         self.live_odds_source = GoalserveLiveOddsSource(config.goalserve_api_key)
         self.live_score_source = GoalserveLiveScoreSource(config.goalserve_api_key, match_id)
 
@@ -378,11 +378,11 @@ class MatchEngine:
         return sanity
 
     async def run_live(self):
-        """Phase 3+4: Live Trading — 킥오프까지 대기 후 자동 시작"""
-        # 킥오프 대기
+        """Phase 3+4: Live Trading — wait for kickoff then auto-start"""
+        # Wait for kickoff
         await self._wait_for_kickoff()
 
-        # 킥오프 5분 전 최종 확인
+        # Final check 5 minutes before kickoff
         if not await self._pre_kickoff_check():
             self.state = "SKIPPED"
             return
@@ -390,7 +390,7 @@ class MatchEngine:
         self.state = "LIVE"
 
         try:
-            # 3개 코루틴 동시 실행
+            # Run 3 coroutines concurrently
             await asyncio.gather(
                 self._tick_loop(),
                 self._live_odds_listener(),
@@ -403,7 +403,7 @@ class MatchEngine:
             self.state = "FINISHED"
 
     async def _tick_loop(self):
-        """코루틴 1: 매 1초 틱"""
+        """Coroutine 1: 1-second tick"""
         while self.model.engine_phase != "FINISHED":
             if self.model.engine_phase in ("FIRST_HALF", "SECOND_HALF"):
                 self.model.t += 1/60
@@ -418,13 +418,13 @@ class MatchEngine:
                     # Step 4.2~4.5
                     await self._execute_trading_cycle(P_true, σ_MC)
 
-                # 상태 스냅샷 → Redis (대시보드용)
+                # State snapshot → Redis (dashboard)
                 await self._publish_state_snapshot(P_true, σ_MC, μ_H, μ_A)
 
             await asyncio.sleep(1)
 
     async def _execute_trading_cycle(self, P_true, σ_MC):
-        """Phase 4: 시그널 → 사이징 → 주문 (Phase 4 v2)"""
+        """Phase 4: signal → sizing → order (Phase 4 v2)"""
         order_allowed = (
             not self.model.cooldown
             and not self.model.ob_freeze
@@ -434,35 +434,35 @@ class MatchEngine:
         for market in self.config.active_markets:
             P_bet365 = self.model.ob_sync.bet365_implied.get(market)
 
-            # Step 4.2: 시그널 생성 (2-pass VWAP + 시장 정합성 확인)
-            # generate_signal 내부에서:
-            #   Pass 1: best ask/bid로 rough qty 산출
-            #   Pass 2: rough qty의 VWAP로 최종 EV 산출
-            #   + bet365 시장 정합성 확인 → alignment_status
+            # Step 4.2: signal generation (2-pass VWAP + market alignment)
+            # Inside `generate_signal`:
+            #   Pass 1: rough qty using best ask/bid
+            #   Pass 2: final EV using VWAP for rough qty
+            #   + market alignment check with bet365 → alignment_status
             signal = generate_signal(
                 P_true[market], σ_MC,
-                self.model.ob_sync,     # VWAP 계산용 호가 깊이 포함
+                self.model.ob_sync,     # includes depth for VWAP
                 P_bet365,
                 self.config.fee_rate, self.config.z,
-                self.config.K_frac,     # 2-pass에서 rough qty 산출에 필요
+                self.config.K_frac,     # needed to derive rough qty in 2-pass
                 self.model.bankroll,
                 market
             )
 
             if signal.direction != "HOLD" and order_allowed:
-                # Step 4.3: 사이징 (signal.P_kalshi는 이미 VWAP 실효 가격)
+                # Step 4.3: sizing (signal.P_kalshi is already VWAP effective price)
                 f = compute_kelly(signal, self.config.fee_rate, self.config.K_frac)
                 amount = apply_risk_limits(f, self.match_id, self.model.bankroll)
 
                 if amount > 0:
-                    # Step 4.5: 주문 (PAPER 모드: VWAP + 슬리피지 시뮬레이션)
+                    # Step 4.5: execution (PAPER mode: VWAP + slippage simulation)
                     fill = await self.execution.execute_order(
                         signal, amount, self.model.ob_sync
                     )
                     if fill:
                         await self._record_trade(signal, fill)
 
-            # Step 4.4: 기존 포지션 청산 평가 (방향별 수식 적용)
+            # Step 4.4: evaluate exits for existing positions (directional formulas)
             P_kalshi_bid = self.model.ob_sync.kalshi_best_bid
             for pos in self.model.positions.get(market, []):
                 exit_signal = await evaluate_exit(
@@ -475,7 +475,7 @@ class MatchEngine:
                     await self._execute_exit(pos, exit_signal)
 
     async def _publish_state_snapshot(self, P_true, σ_MC, μ_H, μ_A):
-        """Redis에 상태 스냅샷 발행 (대시보드 + 알림 서비스 소비)"""
+        """Publish state snapshot to Redis (consumed by dashboard + alert service)"""
         snapshot = {
             "match_id": self.match_id,
             "timestamp": time.time(),
@@ -500,18 +500,18 @@ class MatchEngine:
         await self.redis.publish(f"match:{self.match_id}:state", json.dumps(snapshot))
 
     async def _emergency_shutdown(self, error: Exception):
-        """비정상 종료 시 안전 처리"""
-        # 1. 모든 미체결 주문 취소
+        """Safe handling on abnormal termination"""
+        # 1. Cancel all unfilled orders
         await self.kalshi.cancel_all_orders()
 
-        # 2. 알림 발송
+        # 2. Send alert
         await self.redis.publish("alerts", json.dumps({
             "severity": "CRITICAL",
             "title": f"Engine Crash: {self.match_id}",
             "body": str(error),
         }))
 
-        # 3. 상태 기록
+        # 3. Persist crash state
         await self.db.record_engine_crash(self.match_id, str(error))
 
     def is_finished(self) -> bool:
@@ -520,7 +520,7 @@ class MatchEngine:
     def is_healthy(self) -> bool:
         if self.state != "LIVE":
             return True
-        # 마지막 틱이 5초 이상 전이면 비정상
+        # Unhealthy if last tick is older than 5 seconds
         return (time.time() - self.model.last_tick_time) < 5
 ```
 
@@ -528,7 +528,7 @@ class MatchEngine:
 
 ## Process N+1: DASHBOARD_SERVER
 
-### 구현
+### Implementation
 
 ```python
 # src/dashboard/server.py
@@ -538,12 +538,12 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
-# React 빌드 파일 서빙
+# Serve React build files
 app.mount("/static", StaticFiles(directory="src/dashboard/frontend/build/static"))
 
 @app.websocket("/ws/live/{match_id}")
 async def ws_match_live(websocket: WebSocket, match_id: str):
-    """경기별 실시간 데이터 스트림"""
+    """Per-match real-time data stream"""
     await websocket.accept()
     pubsub = redis.pubsub()
     await pubsub.subscribe(f"match:{match_id}:state")
@@ -557,7 +557,7 @@ async def ws_match_live(websocket: WebSocket, match_id: str):
 
 @app.websocket("/ws/portfolio")
 async def ws_portfolio(websocket: WebSocket):
-    """포트폴리오 전체 실시간 데이터"""
+    """Portfolio-level real-time stream"""
     await websocket.accept()
     pubsub = redis.pubsub()
     await pubsub.psubscribe("match:*:state")
@@ -571,17 +571,17 @@ async def ws_portfolio(websocket: WebSocket):
 
 @app.get("/api/analytics/health")
 async def get_health_dashboard():
-    """Layer 3: 모델 건강 대시보드 데이터"""
+    """Layer 3: model health dashboard data"""
     return await compute_health_metrics(db)
 
 @app.get("/api/analytics/calibration")
 async def get_calibration():
-    """Layer 3: Calibration Plot 데이터"""
+    """Layer 3: calibration plot data"""
     return await compute_calibration_data(db)
 
 @app.get("/api/analytics/pnl")
 async def get_cumulative_pnl():
-    """Layer 3: 누적 P&L 데이터"""
+    """Layer 3: cumulative P&L data"""
     return await compute_cumulative_pnl(db)
 ```
 
@@ -593,7 +593,7 @@ async def get_cumulative_pnl():
 # src/alerts/main.py
 
 class AlertService:
-    """Redis에서 이벤트 구독 → Slack/Telegram 발송"""
+    """Subscribe to Redis events → send to Slack/Telegram"""
 
     async def start(self):
         pubsub = redis.pubsub()
@@ -607,18 +607,18 @@ class AlertService:
                 await self._check_state_alerts(json.loads(message["data"]))
 
     async def _check_state_alerts(self, state: dict):
-        """상태 스냅샷에서 자동 알림 조건 체크"""
-        # Drawdown 체크
+        """Check auto-alert conditions from state snapshots"""
+        # Drawdown check
         if state.get("drawdown_pct", 0) > 10:
             await self.send("CRITICAL", f"Drawdown {state['drawdown_pct']:.1f}%")
 
-        # PRELIMINARY 30초 초과
+        # PRELIMINARY for over 30 seconds
         if (state.get("event_state") == "PRELIMINARY"
             and time.time() - state.get("preliminary_start", 0) > 30):
             await self.send("WARNING",
                 f"PRELIMINARY >30s for {state['match_id']}. Possible VAR.")
 
-        # 데이터 소스 장애
+        # Data source failure
         if state.get("live_odds_healthy") == False:
             await self.send("CRITICAL",
                 f"Live Odds WS down for {state['match_id']}")
@@ -633,25 +633,25 @@ class AlertService:
 
 class DataCollector:
     """
-    24/7 실행. Goalserve 과거 데이터를 지속적으로 수집하여 DB에 적재.
-    Phase 1 재학습의 입력 데이터를 준비한다.
+    Runs 24/7. Continuously collects Goalserve historical data into DB.
+    Prepares training inputs for Phase 1 recalibration.
     """
     async def start(self):
         scheduler = AsyncIOScheduler()
 
-        # 매일 05:00 — 어제 경기 결과 + 스탯 수집
+        # Daily 05:00 — collect yesterday results + stats
         scheduler.add_job(self.collect_yesterday_results, 'cron', hour=5)
 
-        # 매 6시간 — Pregame Odds 스냅샷
+        # Every 6 hours — pregame odds snapshot
         scheduler.add_job(self.collect_odds_snapshot, 'interval', hours=6)
 
-        # 주 1회 — 과거 데이터 무결성 검증
+        # Weekly — verify historical data integrity
         scheduler.add_job(self.verify_data_integrity, 'cron', day_of_week='sun', hour=3)
 
         scheduler.start()
 
     async def collect_yesterday_results(self):
-        """어제 완료된 경기의 결과 + 상세 스탯을 DB에 적재"""
+        """Load completed matches (yesterday) with outcomes + detailed stats into DB"""
         yesterday = (datetime.utcnow() - timedelta(days=1)).strftime("%d.%m.%Y")
 
         for league_id in config.target_leagues:
@@ -661,13 +661,13 @@ class DataCollector:
                 if match["status"] == "Full-time":
                     await db.upsert_match_result(match)
 
-            # Live Game Stats (과거 경기)
+            # Live Game Stats (historical matches)
             for match in fixtures:
                 stats = await goalserve.get_match_stats(match["id"])
                 if stats:
                     await db.upsert_match_stats(match["id"], stats)
 
-            # Pregame Odds (close 배당)
+            # Pregame Odds (closing odds)
             odds = await goalserve.get_odds(league_id, yesterday)
             for match_odds in odds:
                 await db.upsert_match_odds(match_odds)
@@ -675,36 +675,36 @@ class DataCollector:
 
 ---
 
-## CRON 1: RECALIBRATION — Phase 1 재학습
+## CRON 1: RECALIBRATION — Phase 1 Retraining
 
 ```python
 # src/calibration/recalibrate.py
 
 class Recalibrator:
     """
-    Phase 1 전체 파이프라인 재실행.
-    트리거: 수동, 시즌 시작, 또는 Step 4.6 자동 트리거.
+    Re-runs full Phase 1 pipeline.
+    Trigger: manual, season start, or Step 4.6 automated trigger.
     """
     async def run(self, trigger_reason: str):
         log.info(f"Recalibration started. Reason: {trigger_reason}")
 
-        # Step 1.1: 구간 분할
+        # Step 1.1: interval segmentation
         intervals = await build_intervals_from_db(self.db, self.config)
 
-        # Step 1.2: Q 행렬
+        # Step 1.2: Q matrix
         Q = estimate_Q_matrix(intervals, self.config)
 
         # Step 1.3: XGBoost ML
         model, feature_mask = train_xgboost_prior(intervals, self.db, self.config)
 
-        # Step 1.4: NLL 최적화
+        # Step 1.4: NLL optimization
         params = joint_nll_optimization(intervals, model, Q, self.config)
 
-        # Step 1.5: Validation
+        # Step 1.5: validation
         validation = walk_forward_validation(intervals, params, self.config)
 
         if validation.passes_all_criteria():
-            # 새 파라미터를 프로덕션에 배포 (hot-reload)
+            # Deploy new parameters to production (hot-reload)
             new_version = await self.deploy_parameters(params, feature_mask, Q)
             log.info(f"New parameters deployed: version {new_version}")
             await self.alerter.send("INFO",
@@ -716,26 +716,26 @@ class Recalibrator:
 
     async def deploy_parameters(self, params, feature_mask, Q):
         """
-        새 파라미터를 파일로 저장 + Redis에 hot-reload 시그널 발송.
-        활성 MatchEngine들이 다음 경기부터 새 파라미터를 로드.
+        Save new parameters + publish hot-reload signal via Redis.
+        Active MatchEngines load new parameters starting from the next match.
         """
         version = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         param_dir = f"data/parameters/{version}"
         os.makedirs(param_dir)
 
-        # 파라미터 저장
+        # Save parameters
         save_params(params, f"{param_dir}/params.json")
         save_feature_mask(feature_mask, f"{param_dir}/feature_mask.json")
         save_Q_matrix(Q, f"{param_dir}/Q.npy")
         model.save_model(f"{param_dir}/xgboost.xgb")
 
-        # 심볼릭 링크 업데이트
+        # Update symbolic link
         symlink_path = "data/parameters/production"
         if os.path.islink(symlink_path):
             os.unlink(symlink_path)
         os.symlink(param_dir, symlink_path)
 
-        # Hot-reload 시그널
+        # Hot-reload signal
         await redis.publish("system:param_reload", version)
 
         return version
@@ -749,46 +749,46 @@ class Recalibrator:
 # src/analytics/daily.py
 
 class DailyAnalytics:
-    """매일 자정 실행. Step 4.6의 사후 분석 + 적응적 파라미터 조정."""
+    """Runs daily at midnight. Post-match Step 4.6 analytics + adaptive updates."""
 
     async def run(self):
-        # 1. 오늘 정산된 경기들의 사후 분석
+        # 1. Post-analysis for today’s settled matches
         today_trades = await self.db.get_today_settled_trades()
 
         if not today_trades:
             return
 
-        # 2. 11개 지표 계산
+        # 2. Compute 11 metrics
         analytics = compute_all_analytics(today_trades, self.db)
 
-        # 3. 적응적 파라미터 조정
+        # 3. Adaptive parameter updates
         param_updates = adaptive_parameter_update(analytics)
         if param_updates:
             await self.apply_param_updates(param_updates)
 
-        # 4. Phase 1 재학습 트리거 체크
+        # 4. Check Phase 1 retraining trigger
         if analytics.get("brier_score_trend") == "worsening_3weeks":
             await self.trigger_recalibration("brier_score_degradation")
 
-        # 5. 일일 리포트 생성 + Slack 발송
+        # 5. Generate daily report + send Slack
         report = generate_daily_report(analytics, today_trades)
         await alerter.send("INFO", report)
 
-        # 6. DB에 분석 결과 저장
+        # 6. Save analytics to DB
         await self.db.save_daily_analytics(analytics)
 ```
 
 ---
 
-## 파라미터 Hot-Reload
+## Parameter Hot-Reload
 
-활성 MatchEngine을 재시작하지 않고 새 파라미터를 적용하는 메커니즘:
+Mechanism to apply new parameters without restarting active MatchEngines:
 
 ```python
-# src/engine/match_engine.py 내부
+# inside src/engine/match_engine.py
 
 async def _param_reload_listener(self):
-    """Redis에서 파라미터 재로드 시그널 수신"""
+    """Receive parameter reload signals from Redis"""
     pubsub = redis.pubsub()
     await pubsub.subscribe("system:param_reload")
 
@@ -797,19 +797,19 @@ async def _param_reload_listener(self):
             new_version = message["data"]
             log.info(f"Parameter reload signal: v{new_version}")
 
-            # 현재 진행 중인 경기에는 적용하지 않음
-            # 다음 경기의 Phase 2에서 새 파라미터 로드
+            # Do not apply to an in-progress match
+            # Load in Phase 2 for the next match
             self.config.pending_param_version = new_version
 ```
 
-> **안전 규칙:** 경기 중에는 파라미터를 절대 변경하지 않는다.
-> 새 파라미터는 다음 경기의 Phase 2에서 로드된다.
+> **Safety Rule:** Never change parameters during an active match.
+> New parameters are loaded in Phase 2 of the next match.
 
 ---
 
-## 장애 복구 (Self-Healing)
+## Failure Recovery (Self-Healing)
 
-### 프로세스 감독 — systemd
+### Process Supervision — systemd
 
 ```ini
 # /etc/systemd/system/kalshi-scheduler.service
@@ -851,39 +851,39 @@ WantedBy=multi-user.target
 ```ini
 # /etc/systemd/system/kalshi-alerts.service
 # /etc/systemd/system/kalshi-collector.service
-# (동일 패턴)
+# (same pattern)
 ```
 
-### 장애 시나리오별 자동 복구
+### Auto-Recovery by Failure Scenario
 
-| 장애 | 감지 | 자동 복구 | 알림 |
+| Failure | Detection | Auto-Recovery | Alert |
 |------|------|----------|------|
-| MatchEngine 크래시 | Scheduler monitor (10초) | 미체결 주문 취소, 포지션 유지 | 🔴 CRITICAL |
-| Live Odds WS 끊김 | heartbeat 5초 | 재연결 시도 3회 → fallback to 2-Layer | 🔴 CRITICAL |
-| Live Score 폴링 실패 | HTTP 3회 연속 | 재시도 + 5회 시 경기 스킵 | 🔴 CRITICAL |
-| Kalshi WS 끊김 | heartbeat 10초 | 미체결 취소 → 재연결 | 🔴 CRITICAL |
-| Redis 다운 | 연결 실패 | 재연결 시도 (10초 간격) + 로컬 큐 | ⚠️ WARNING |
-| PostgreSQL 다운 | 연결 실패 | 로그를 로컬 파일에 버퍼링 | ⚠️ WARNING |
-| Scheduler 크래시 | systemd | 자동 재시작 (5초 후) | 🔴 CRITICAL |
-| 서버 리부트 | systemd enable | 전 서비스 자동 시작 | 🔴 CRITICAL |
-| Goalserve API 키 만료 | HTTP 401 | 알림 → 수동 갱신 필요 | 🔴 CRITICAL |
+| MatchEngine crash | Scheduler monitor (10s) | Cancel unfilled orders, keep positions | 🔴 CRITICAL |
+| Live Odds WS disconnect | 5s heartbeat | Reconnect 3 times → fallback to 2-Layer | 🔴 CRITICAL |
+| Live Score polling failure | 3 consecutive HTTP failures | Retry + skip match at 5 failures | 🔴 CRITICAL |
+| Kalshi WS disconnect | 10s heartbeat | Cancel unfilled orders → reconnect | 🔴 CRITICAL |
+| Redis down | Connection failure | Retry every 10s + local queue | ⚠️ WARNING |
+| PostgreSQL down | Connection failure | Buffer logs to local file | ⚠️ WARNING |
+| Scheduler crash | systemd | Auto-restart after 5s | 🔴 CRITICAL |
+| Server reboot | `systemd enable` | Auto-start all services | 🔴 CRITICAL |
+| Goalserve API key expired | HTTP 401 | Alert → manual key refresh required | 🔴 CRITICAL |
 
 ---
 
-## 설정 관리
+## Configuration Management
 
-### 전역 설정
+### Global Configuration
 
 ```yaml
 # config/system.yaml
 
-# 트레이딩 모드
+# Trading mode
 trading_mode: "paper"  # "paper" or "live"
 
 # Goalserve
 goalserve:
-  api_key: "${GOALSERVE_API_KEY}"  # 환경변수에서 로드
-  live_score_poll_interval: 3      # 초
+  api_key: "${GOALSERVE_API_KEY}"  # loaded from env var
+  live_score_poll_interval: 3      # seconds
   live_odds_ws_url: "wss://goalserve.com/liveodds"
 
 # Kalshi
@@ -893,14 +893,14 @@ kalshi:
   ws_url: "wss://trading-api.kalshi.com/trade-api/ws/v2"
   rest_url: "https://trading-api.kalshi.com/trade-api/v2"
 
-# 리스크 파라미터
+# Risk parameters
 risk:
   f_order_cap: 0.03
   f_match_cap: 0.05
   f_total_cap: 0.20
-  initial_bankroll: 5000  # PAPER 모드용
+  initial_bankroll: 5000  # for PAPER mode
 
-# 트레이딩 파라미터 (적응적 조정 대상)
+# Trading parameters (adaptive update targets)
 trading:
   K_frac: 0.25
   z: 1.645
@@ -911,24 +911,24 @@ trading:
   rapid_entry_enabled: false
   bet365_divergence_auto_exit: false
 
-# 인프라
+# Infrastructure
 redis:
   url: "redis://localhost:6379/0"
 postgres:
   url: "postgresql://kalshi:${DB_PASSWORD}@localhost:5432/kalshi"
 
-# 알림
+# Alerts
 alerts:
   slack_webhook: "${SLACK_WEBHOOK_URL}"
   telegram_bot_token: "${TELEGRAM_BOT_TOKEN}"
   telegram_chat_id: "${TELEGRAM_CHAT_ID}"
 
-# 대상 리그
+# Target leagues
 target_leagues:
   - "1204"  # EPL
   - "1399"  # La Liga
 
-# 대상 마켓
+# Target markets
 active_markets:
   - "over_25"
   - "home_win"
@@ -936,24 +936,24 @@ active_markets:
   - "btts"
 ```
 
-### 환경 분리
+### Environment Separation
 
 ```
 config/
-├── system.yaml          # 기본 설정
-├── system.paper.yaml    # PAPER 모드 오버라이드
-├── system.live.yaml     # LIVE 모드 오버라이드
-└── secrets.env          # API 키 (gitignore)
+├── system.yaml          # base config
+├── system.paper.yaml    # PAPER mode overrides
+├── system.live.yaml     # LIVE mode overrides
+└── secrets.env          # API keys (gitignore)
 ```
 
 ---
 
-## 데이터베이스 스키마
+## Database Schema
 
-### PostgreSQL 테이블
+### PostgreSQL Tables
 
 ```sql
--- 경기 스케줄 + 상태
+-- Match schedule + status
 CREATE TABLE match_jobs (
     match_id        TEXT PRIMARY KEY,
     league_id       TEXT NOT NULL,
@@ -966,7 +966,7 @@ CREATE TABLE match_jobs (
     updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 거래 로그 (Step 4.5, Phase 4 v2)
+-- Trade logs (Step 4.5, Phase 4 v2)
 CREATE TABLE trade_logs (
     id              BIGSERIAL PRIMARY KEY,
     timestamp       TIMESTAMPTZ NOT NULL,
@@ -980,10 +980,10 @@ CREATE TABLE trade_logs (
     fill_price      NUMERIC(6,4),
     P_true          NUMERIC(6,4),
     P_true_cons     NUMERIC(6,4),
-    P_kalshi        NUMERIC(6,4),        -- VWAP 실효 가격 (v2: best가 아닌 VWAP)
-    P_kalshi_best   NUMERIC(6,4),        -- best ask/bid (VWAP와 비교용, v2 추가)
+    P_kalshi        NUMERIC(6,4),        -- VWAP effective price (v2: VWAP, not best)
+    P_kalshi_best   NUMERIC(6,4),        -- best ask/bid (added in v2 for VWAP comparison)
     P_bet365        NUMERIC(6,4),
-    EV_adj          NUMERIC(6,4),        -- VWAP 반영 최종 EV (v2)
+    EV_adj          NUMERIC(6,4),        -- final EV after VWAP (v2)
     sigma_MC        NUMERIC(6,4),
     pricing_mode    TEXT,
     f_kelly         NUMERIC(6,4),
@@ -997,11 +997,11 @@ CREATE TABLE trade_logs (
     bankroll_before NUMERIC(10,2),
     bankroll_after  NUMERIC(10,2),
     is_paper        BOOLEAN DEFAULT FALSE,
-    paper_slippage  NUMERIC(6,4)         -- v2: Paper 모드 시뮬레이션 슬리피지
+    paper_slippage  NUMERIC(6,4)         -- v2: simulated paper-mode slippage
 );
 
--- 포지션 (활성 + 정산 완료)
--- v2: realized_pnl은 방향별 정산 공식으로 계산
+-- Positions (open + settled)
+-- v2: `realized_pnl` uses direction-specific settlement formulas
 --   Buy Yes: (settlement - entry_price) × quantity - fee
 --   Buy No:  (entry_price - settlement) × quantity - fee
 CREATE TABLE positions (
@@ -1009,23 +1009,23 @@ CREATE TABLE positions (
     match_id        TEXT NOT NULL,
     market_ticker   TEXT NOT NULL,
     direction       TEXT NOT NULL,       -- BUY_YES | BUY_NO
-    entry_price     NUMERIC(6,4),        -- Yes 확률 공간 (Buy No: Yes를 sell한 가격)
+    entry_price     NUMERIC(6,4),        -- Yes probability space (Buy No: price at which Yes was sold)
     entry_time      TIMESTAMPTZ,
     quantity        INT,
     settlement      NUMERIC(6,4),        -- NULL if open, 1.00 or 0.00 at expiry
-    realized_pnl    NUMERIC(10,2),       -- 방향별 정산 (v2)
+    realized_pnl    NUMERIC(10,2),       -- directional settlement (v2)
     closed_at       TIMESTAMPTZ,
     is_paper        BOOLEAN DEFAULT FALSE
 );
 
--- 일일 분석 결과 (Step 4.6)
+-- Daily analytics output (Step 4.6)
 CREATE TABLE daily_analytics (
     date            DATE PRIMARY KEY,
     brier_score     NUMERIC(6,4),
     delta_bs_pinnacle NUMERIC(6,4),
     edge_realization NUMERIC(6,4),
     max_drawdown_pct NUMERIC(6,4),
-    bet365_alignment_value NUMERIC(6,4),  -- v2: "시장 정합성 가치" (v1: bet365_validation_value)
+    bet365_alignment_value NUMERIC(6,4),  -- v2: market alignment value (v1: bet365_validation_value)
     preliminary_accuracy NUMERIC(6,4),
     yes_edge_realization NUMERIC(6,4),
     no_edge_realization NUMERIC(6,4),
@@ -1036,7 +1036,7 @@ CREATE TABLE daily_analytics (
     param_version   TEXT
 );
 
--- 이벤트 로그 (TimescaleDB hypertable)
+-- Event logs (TimescaleDB hypertable)
 CREATE TABLE event_logs (
     time            TIMESTAMPTZ NOT NULL,
     match_id        TEXT NOT NULL,
@@ -1047,7 +1047,7 @@ CREATE TABLE event_logs (
 );
 SELECT create_hypertable('event_logs', 'time');
 
--- 틱별 스냅샷 (TimescaleDB hypertable, 분석용)
+-- Tick snapshots (TimescaleDB hypertable, analytics)
 CREATE TABLE tick_snapshots (
     time            TIMESTAMPTZ NOT NULL,
     match_id        TEXT NOT NULL,
@@ -1067,7 +1067,7 @@ CREATE TABLE tick_snapshots (
 );
 SELECT create_hypertable('tick_snapshots', 'time');
 
--- Phase 1 파라미터 버전 관리
+-- Phase 1 parameter versioning
 CREATE TABLE param_versions (
     version         TEXT PRIMARY KEY,
     created_at      TIMESTAMPTZ DEFAULT NOW(),
@@ -1076,7 +1076,7 @@ CREATE TABLE param_versions (
     is_production   BOOLEAN DEFAULT FALSE
 );
 
--- 과거 경기 데이터 (Phase 1 학습용)
+-- Historical match data (for Phase 1 training)
 CREATE TABLE historical_matches (
     match_id        TEXT PRIMARY KEY,
     league_id       TEXT,
@@ -1107,132 +1107,132 @@ kalshi-soccer-quant/
 │
 ├── README.md
 ├── LICENSE
-├── pyproject.toml                     # Python 패키지 설정 (poetry/pip)
-├── Makefile                           # 빌드/배포 자동화
-├── docker-compose.yml                 # Redis + PostgreSQL + 앱 (선택적)
+├── pyproject.toml                     # Python package config (poetry/pip)
+├── Makefile                           # build/deploy automation
+├── docker-compose.yml                 # Redis + PostgreSQL + app (optional)
 │
 ├── config/
-│   ├── system.yaml                    # 기본 설정
-│   ├── system.paper.yaml              # PAPER 모드 오버라이드
-│   ├── system.live.yaml               # LIVE 모드 오버라이드
-│   ├── leagues.yaml                   # 대상 리그 목록
-│   └── secrets.env                    # API 키 (gitignore)
+│   ├── system.yaml                    # base config
+│   ├── system.paper.yaml              # PAPER mode override
+│   ├── system.live.yaml               # LIVE mode override
+│   ├── leagues.yaml                   # target league list
+│   └── secrets.env                    # API keys (gitignore)
 │
 ├── data/
-│   ├── parameters/                    # Phase 1 산출물
-│   │   ├── production -> ./20250915_120000/   # 심볼릭 링크 (현재 프로덕션)
-│   │   ├── 20250915_120000/           # 버전별 디렉토리
+│   ├── parameters/                    # Phase 1 artifacts
+│   │   ├── production -> ./20250915_120000/   # symlink (current production)
+│   │   ├── 20250915_120000/           # versioned directory
 │   │   │   ├── params.json            # b[], γ^H, γ^A, δ_H, δ_A
-│   │   │   ├── Q.npy                  # Q 행렬 (4×4)
-│   │   │   ├── xgboost.xgb           # XGBoost 가중치
-│   │   │   ├── feature_mask.json      # 선택된 피처 목록
-│   │   │   ├── median_values.json     # 결측 대체용 중앙값
-│   │   │   └── validation_report.json # Step 1.5 검증 결과
-│   │   └── 20250801_090000/           # 이전 버전 (롤백용)
+│   │   │   ├── Q.npy                  # Q matrix (4×4)
+│   │   │   ├── xgboost.xgb            # XGBoost weights
+│   │   │   ├── feature_mask.json      # selected feature list
+│   │   │   ├── median_values.json     # medians for missing-value fill
+│   │   │   └── validation_report.json # Step 1.5 validation result
+│   │   └── 20250801_090000/           # previous version (rollback)
 │   │       └── ...
 │   │
-│   └── cache/                         # 런타임 캐시
-│       ├── player_rolling/            # 선수별 롤링 스탯 캐시
-│       └── team_rolling/              # 팀별 롤링 스탯 캐시
+│   └── cache/                         # runtime cache
+│       ├── player_rolling/            # per-player rolling stats cache
+│       └── team_rolling/              # per-team rolling stats cache
 │
 ├── src/
 │   ├── __init__.py
 │   │
-│   ├── common/                        # 공유 유틸리티
+│   ├── common/                        # shared utilities
 │   │   ├── __init__.py
-│   │   ├── config.py                  # SystemConfig 로더
-│   │   ├── logging.py                 # 구조화된 로깅
-│   │   ├── redis_client.py            # Redis Pub/Sub 래퍼
-│   │   ├── db_client.py               # PostgreSQL 래퍼
-│   │   └── types.py                   # 공유 데이터 타입 (NormalizedEvent, Signal, etc.)
+│   │   ├── config.py                  # SystemConfig loader
+│   │   ├── logging.py                 # structured logging
+│   │   ├── redis_client.py            # Redis Pub/Sub wrapper
+│   │   ├── db_client.py               # PostgreSQL wrapper
+│   │   └── types.py                   # shared data types (NormalizedEvent, Signal, etc.)
 │   │
-│   ├── goalserve/                     # Goalserve API 클라이언트
+│   ├── goalserve/                     # Goalserve API clients
 │   │   ├── __init__.py
-│   │   ├── client.py                  # REST API 클라이언트 (Fixtures, Stats, Odds)
-│   │   ├── live_score_source.py       # GoalserveLiveScoreSource (REST 폴링)
+│   │   ├── client.py                  # REST client (Fixtures, Stats, Odds)
+│   │   ├── live_score_source.py       # GoalserveLiveScoreSource (REST polling)
 │   │   ├── live_odds_source.py        # GoalserveLiveOddsSource (WebSocket)
-│   │   └── parsers.py                 # Goalserve JSON → 내부 타입 변환
+│   │   └── parsers.py                 # Goalserve JSON → internal type conversion
 │   │
-│   ├── kalshi/                        # Kalshi API 클라이언트
+│   ├── kalshi/                        # Kalshi API clients
 │   │   ├── __init__.py
-│   │   ├── client.py                  # REST + WebSocket 클라이언트
+│   │   ├── client.py                  # REST + WebSocket client
 │   │   ├── orderbook.py               # OrderBookSync (VWAP buy/sell, depth)
-│   │   └── execution.py               # ExecutionLayer (PAPER: VWAP+슬리피지+부분체결 / LIVE: Kalshi REST)
+│   │   └── execution.py               # ExecutionLayer (PAPER: VWAP+slippage+partial / LIVE: Kalshi REST)
 │   │
 │   ├── calibration/                   # Phase 1: Offline Calibration
 │   │   ├── __init__.py
-│   │   ├── step_1_1_intervals.py      # 구간 분할 (VAR 필터링, 자책골 처리)
-│   │   ├── step_1_2_Q_matrix.py       # 마르코프 Q 행렬 추정
-│   │   ├── step_1_3_ml_prior.py       # XGBoost Poisson 학습 + 피처 선택
-│   │   ├── step_1_4_nll.py            # Joint NLL 최적화 (PyTorch)
-│   │   ├── step_1_5_validation.py     # Walk-Forward CV + 진단
-│   │   ├── recalibrate.py             # 재학습 오케스트레이터
-│   │   └── features/                  # 피처 엔지니어링
+│   │   ├── step_1_1_intervals.py      # interval segmentation (VAR filter, own-goal handling)
+│   │   ├── step_1_2_Q_matrix.py       # Markov Q matrix estimation
+│   │   ├── step_1_3_ml_prior.py       # XGBoost Poisson training + feature selection
+│   │   ├── step_1_4_nll.py            # Joint NLL optimization (PyTorch)
+│   │   ├── step_1_5_validation.py     # Walk-Forward CV + diagnostics
+│   │   ├── recalibrate.py             # retraining orchestrator
+│   │   └── features/                  # feature engineering
 │   │       ├── __init__.py
-│   │       ├── tier1_team.py          # 팀 레벨 롤링 스탯
-│   │       ├── tier2_player.py        # 선수 레벨 집계
-│   │       ├── tier3_odds.py          # 배당률 피처
-│   │       └── tier4_context.py       # 컨텍스트 (H/A, 휴식일, H2H)
+│   │       ├── tier1_team.py          # team-level rolling stats
+│   │       ├── tier2_player.py        # player-level aggregation
+│   │       ├── tier3_odds.py          # odds features
+│   │       └── tier4_context.py       # context (H/A, rest days, H2H)
 │   │
 │   ├── prematch/                      # Phase 2: Pre-Match Initialization
 │   │   ├── __init__.py
-│   │   ├── step_2_1_data_collection.py    # 라인업 + 스탯 + 배당 수집
-│   │   ├── step_2_2_feature_selection.py  # feature_mask 적용
-│   │   ├── step_2_3_a_parameter.py        # a 역산 + C_time
-│   │   ├── step_2_4_sanity_check.py       # 다중 차원 Sanity Check
-│   │   └── step_2_5_initialization.py     # 모델 인스턴스화 + 연결
+│   │   ├── step_2_1_data_collection.py    # lineup + stats + odds collection
+│   │   ├── step_2_2_feature_selection.py  # apply feature_mask
+│   │   ├── step_2_3_a_parameter.py        # invert a-params + C_time
+│   │   ├── step_2_4_sanity_check.py       # multi-dimensional sanity check
+│   │   └── step_2_5_initialization.py     # model instantiation + wiring
 │   │
 │   ├── engine/                        # Phase 3: Live Trading Engine
 │   │   ├── __init__.py
-│   │   ├── match_engine.py            # MatchEngine 메인 클래스
-│   │   ├── state_machine.py           # Engine Phase + Event State 머신
-│   │   ├── step_3_2_remaining_mu.py   # 잔여 기대 득점 (해석적 + P_grid)
-│   │   ├── step_3_3_event_handler.py  # Preliminary/Confirmed 핸들러
-│   │   ├── step_3_4_pricing.py        # 하이브리드 프라이싱 (해석적/MC)
+│   │   ├── match_engine.py            # MatchEngine main class
+│   │   ├── state_machine.py           # Engine phase + event state machine
+│   │   ├── step_3_2_remaining_mu.py   # remaining expected goals (analytical + P_grid)
+│   │   ├── step_3_3_event_handler.py  # preliminary/confirmed handler
+│   │   ├── step_3_4_pricing.py        # hybrid pricing (analytical/MC)
 │   │   ├── step_3_5_stoppage.py       # StoppageTimeManager
-│   │   ├── mc_core.py                 # Numba JIT MC 시뮬레이션 코어
-│   │   └── ob_freeze.py               # 3-Layer ob_freeze 로직
+│   │   ├── mc_core.py                 # Numba JIT MC simulation core
+│   │   └── ob_freeze.py               # 3-Layer ob_freeze logic
 │   │
 │   ├── trading/                       # Phase 4: Arbitrage & Execution
 │   │   ├── __init__.py
-│   │   ├── step_4_1_orderbook_sync.py # 호가창 동기화 + bet365 참조
-│   │   ├── step_4_2_edge_detection.py # 방향별 EV + 3자 교차 검증
+│   │   ├── step_4_1_orderbook_sync.py # order-book sync + bet365 reference
+│   │   ├── step_4_2_edge_detection.py # directional EV + 3-way cross-check
 │   │   ├── step_4_3_position_sizing.py # Kelly + bet365 multiplier
-│   │   ├── step_4_4_exit_logic.py     # 4개 청산 트리거
-│   │   ├── step_4_5_order_execution.py # 주문 제출 + Rapid Entry
-│   │   └── risk_manager.py            # 3-Layer 리스크 한도
+│   │   ├── step_4_4_exit_logic.py     # 4 exit triggers
+│   │   ├── step_4_5_order_execution.py # order submit + Rapid Entry
+│   │   └── risk_manager.py            # 3-Layer risk caps
 │   │
-│   ├── analytics/                     # Step 4.6: 사후 분석
+│   ├── analytics/                     # Step 4.6: post-analysis
 │   │   ├── __init__.py
-│   │   ├── daily.py                   # DailyAnalytics (매일 자정)
-│   │   ├── metrics.py                 # 11개 지표 계산
-│   │   ├── adaptive_params.py         # 7개 파라미터 적응적 조정
-│   │   └── reports.py                 # 일일/주간 리포트 생성
+│   │   ├── daily.py                   # DailyAnalytics (daily midnight)
+│   │   ├── metrics.py                 # 11 metrics computation
+│   │   ├── adaptive_params.py         # adaptive updates for 7 parameters
+│   │   └── reports.py                 # daily/weekly report generation
 │   │
-│   ├── scheduler/                     # 자동 스케줄링
+│   ├── scheduler/                     # automated scheduling
 │   │   ├── __init__.py
-│   │   └── main.py                    # MatchScheduler (24/7 실행)
+│   │   └── main.py                    # MatchScheduler (24/7)
 │   │
-│   ├── data/                          # 데이터 수집
+│   ├── data/                          # data collection
 │   │   ├── __init__.py
-│   │   └── collector.py               # DataCollector (24/7 실행)
+│   │   └── collector.py               # DataCollector (24/7)
 │   │
-│   ├── alerts/                        # 알림 서비스
+│   ├── alerts/                        # alert service
 │   │   ├── __init__.py
-│   │   ├── main.py                    # AlertService (24/7 실행)
-│   │   ├── slack.py                   # Slack Webhook
-│   │   └── telegram.py                # Telegram Bot
+│   │   ├── main.py                    # AlertService (24/7)
+│   │   ├── slack.py                   # Slack webhook
+│   │   └── telegram.py                # Telegram bot
 │   │
-│   └── dashboard/                     # 대시보드
+│   └── dashboard/                     # dashboard
 │       ├── __init__.py
-│       ├── server.py                  # FastAPI + WebSocket 서버
-│       ├── api/                       # REST API 엔드포인트
+│       ├── server.py                  # FastAPI + WebSocket server
+│       ├── api/                       # REST API endpoints
 │       │   ├── __init__.py
-│       │   ├── live.py                # Layer 1 데이터
-│       │   ├── portfolio.py           # Layer 2 데이터
-│       │   └── analytics.py           # Layer 3 데이터
+│       │   ├── live.py                # Layer 1 data
+│       │   ├── portfolio.py           # Layer 2 data
+│       │   └── analytics.py           # Layer 3 data
 │       │
-│       └── frontend/                  # React 프론트엔드
+│       └── frontend/                  # React frontend
 │           ├── package.json
 │           ├── src/
 │           │   ├── App.jsx
@@ -1240,87 +1240,87 @@ kalshi-soccer-quant/
 │           │   ├── components/
 │           │   │   ├── Layout/
 │           │   │   │   ├── Navbar.jsx
-│           │   │   │   └── ModeBadge.jsx      # PAPER/LIVE 표시
+│           │   │   │   └── ModeBadge.jsx      # PAPER/LIVE indicator
 │           │   │   │
 │           │   │   ├── Layer1_LiveMatch/
-│           │   │   │   ├── MatchPanel.jsx      # 경기별 패널 컨테이너
-│           │   │   │   ├── MatchHeader.jsx     # 1A: 상태 헤더
+│           │   │   │   ├── MatchPanel.jsx      # per-match panel container
+│           │   │   │   ├── MatchHeader.jsx     # 1A: status header
 │           │   │   │   ├── PriceChart.jsx      # 1B: P_true vs P_kalshi vs P_bet365 ⭐
-│           │   │   │   ├── MuChart.jsx         # 1C: μ 감쇠 차트
-│           │   │   │   ├── SignalPanel.jsx     # 1D: 시그널 + 포지션
-│           │   │   │   ├── EventLog.jsx        # 1E: 이벤트 로그
-│           │   │   │   └── SourceStatus.jsx    # 1F: 데이터 소스 상태
+│           │   │   │   ├── MuChart.jsx         # 1C: μ decay chart
+│           │   │   │   ├── SignalPanel.jsx     # 1D: signals + positions
+│           │   │   │   ├── EventLog.jsx        # 1E: event log
+│           │   │   │   └── SourceStatus.jsx    # 1F: data source status
 │           │   │   │
 │           │   │   ├── Layer2_Portfolio/
-│           │   │   │   ├── RiskDashboard.jsx   # 2A: 리스크 대시보드
-│           │   │   │   ├── PositionTable.jsx   # 2B: 포지션 테이블
-│           │   │   │   └── PnLTimeline.jsx     # 2C: P&L 타임라인
+│           │   │   │   ├── RiskDashboard.jsx   # 2A: risk dashboard
+│           │   │   │   ├── PositionTable.jsx   # 2B: position table
+│           │   │   │   └── PnLTimeline.jsx     # 2C: P&L timeline
 │           │   │   │
 │           │   │   └── Layer3_Analytics/
-│           │   │       ├── HealthDashboard.jsx # 3A: 건강 대시보드
-│           │   │       ├── CalibrationPlot.jsx # 3B: Calibration Plot
-│           │   │       ├── CumulativePnL.jsx   # 3C: 누적 P&L + Drawdown
-│           │   │       ├── DirectionalAnalysis.jsx # 3D: 방향별 분석
-│           │   │       ├── Bet365Effect.jsx    # 3E: bet365 검증 효과
-│           │   │       ├── PrelimAccuracy.jsx  # 3F: Preliminary 정확도
-│           │   │       └── ParamHistory.jsx    # 3G: 파라미터 히스토리
+│           │   │       ├── HealthDashboard.jsx # 3A: health dashboard
+│           │   │       ├── CalibrationPlot.jsx # 3B: calibration plot
+│           │   │       ├── CumulativePnL.jsx   # 3C: cumulative P&L + drawdown
+│           │   │       ├── DirectionalAnalysis.jsx # 3D: directional analysis
+│           │   │       ├── Bet365Effect.jsx    # 3E: bet365 validation effect
+│           │   │       ├── PrelimAccuracy.jsx  # 3F: preliminary accuracy
+│           │   │       └── ParamHistory.jsx    # 3G: parameter history
 │           │   │
 │           │   ├── hooks/
-│           │   │   ├── useMatchStream.js       # WebSocket 실시간 데이터
-│           │   │   ├── usePortfolio.js         # 포트폴리오 집계
-│           │   │   └── useAnalytics.js         # 분석 API 호출
+│           │   │   ├── useMatchStream.js       # WebSocket live stream
+│           │   │   ├── usePortfolio.js         # portfolio aggregation
+│           │   │   └── useAnalytics.js         # analytics API calls
 │           │   │
 │           │   └── utils/
-│           │       ├── formatters.js           # 가격/P&L 포맷
-│           │       └── colors.js               # 상태별 색상 코드
+│           │       ├── formatters.js           # price/P&L formatting
+│           │       └── colors.js               # status color codes
 │           │
-│           └── build/                 # React 빌드 산출물 (gitignore)
+│           └── build/                 # React build output (gitignore)
 │
 ├── scripts/
-│   ├── setup_db.sql                   # PostgreSQL 스키마 초기화
-│   ├── setup_systemd.sh               # systemd 서비스 등록
-│   ├── deploy.sh                      # 배포 스크립트
-│   ├── backup_db.sh                   # DB 백업
-│   └── run_recalibration.py           # 수동 재학습 트리거
+│   ├── setup_db.sql                   # PostgreSQL schema init
+│   ├── setup_systemd.sh               # systemd service registration
+│   ├── deploy.sh                      # deployment script
+│   ├── backup_db.sh                   # DB backup
+│   └── run_recalibration.py           # manual retraining trigger
 │
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py                    # pytest fixtures (mock Goalserve, mock Kalshi)
 │   │
 │   ├── unit/
-│   │   ├── test_intervals.py          # Step 1.1 구간 분할
-│   │   ├── test_Q_matrix.py           # Step 1.2 Q 추정
-│   │   ├── test_nll.py                # Step 1.4 NLL 수학 검증
-│   │   ├── test_a_parameter.py        # Step 2.3 역산
-│   │   ├── test_remaining_mu.py       # Step 3.2 적분
-│   │   ├── test_mc_core.py            # Step 3.4 MC 시뮬레이션
-│   │   ├── test_edge_detection.py     # Step 4.2 EV + 방향별 P_cons
+│   │   ├── test_intervals.py          # Step 1.1 interval segmentation
+│   │   ├── test_Q_matrix.py           # Step 1.2 Q estimation
+│   │   ├── test_nll.py                # Step 1.4 NLL math validation
+│   │   ├── test_a_parameter.py        # Step 2.3 inversion
+│   │   ├── test_remaining_mu.py       # Step 3.2 integration
+│   │   ├── test_mc_core.py            # Step 3.4 MC simulation
+│   │   ├── test_edge_detection.py     # Step 4.2 EV + directional P_cons
 │   │   ├── test_kelly.py              # Step 4.3 Kelly
-│   │   ├── test_exit_logic.py         # Step 4.4 청산 트리거
-│   │   └── test_risk_limits.py        # 3-Layer 리스크
+│   │   ├── test_exit_logic.py         # Step 4.4 exit triggers
+│   │   └── test_risk_limits.py        # 3-Layer risk
 │   │
 │   ├── integration/
-│   │   ├── test_goalserve_client.py   # Goalserve API 연동
-│   │   ├── test_kalshi_client.py      # Kalshi API 연동
-│   │   ├── test_match_engine.py       # MatchEngine 전체 흐름
-│   │   └── test_scheduler.py          # 스케줄러 스폰 로직
+│   │   ├── test_goalserve_client.py   # Goalserve API integration
+│   │   ├── test_kalshi_client.py      # Kalshi API integration
+│   │   ├── test_match_engine.py       # full MatchEngine flow
+│   │   └── test_scheduler.py          # scheduler spawn logic
 │   │
 │   └── replay/
-│       ├── replay_engine.py           # 과거 경기 리플레이 (백테스트)
-│       └── test_replay.py             # 리플레이 기반 시스템 검증
+│       ├── replay_engine.py           # historical replay (backtest)
+│       └── test_replay.py             # replay-based system validation
 │
 ├── docs/
-│   ├── phase1_goalserve_v1.md         # Phase 1 설계 문서
-│   ├── phase2_goalserve_v1.md         # Phase 2 설계 문서
-│   ├── phase3_goalserve_v1.md         # Phase 3 설계 문서
-│   ├── phase4_goalserve_v1.md         # Phase 4 설계 문서
-│   ├── dashboard_design_v1.md         # 대시보드 설계 문서
-│   └── implementation_blueprint.md    # 본 문서
+│   ├── phase1.md         # Phase 1 design doc
+│   ├── phase2.md         # Phase 2 design doc
+│   ├── phase3.md         # Phase 3 design doc
+│   ├── phase4.md         # Phase 4 design doc
+│   ├── dashboard_design.md         # dashboard design doc
+│   └── implementation_blueprint.md    # this document
 │
-└── logs/                              # 런타임 로그 (gitignore)
+└── logs/                              # runtime logs (gitignore)
     ├── scheduler.log
     ├── engine/
-    │   ├── ARS-CHE-20251018.log       # 경기별 엔진 로그
+    │   ├── ARS-CHE-20251018.log       # per-match engine logs
     │   └── ...
     ├── dashboard.log
     ├── alerts.log
@@ -1329,26 +1329,26 @@ kalshi-soccer-quant/
 
 ---
 
-## 구현 순서 로드맵
+## Implementation Roadmap (Build Order)
 
-### Sprint 1: 기반 인프라 (1~2주)
+### Sprint 1: Foundation Infrastructure (1~2 weeks)
 
 ```
-목표: 프로세스가 뜨고, 데이터가 흐르고, 화면이 보인다
+Goal: processes start, data flows, dashboard is visible
 
-├── config/ 설정 파일 구조
+├── config/ configuration file structure
 ├── src/common/ (config, logging, redis, db, types)
 ├── src/goalserve/client.py (REST API — Fixtures, Stats, Odds)
-├── src/data/collector.py (과거 데이터 수집 시작)
-├── scripts/setup_db.sql (PostgreSQL 스키마)
+├── src/data/collector.py (start historical data ingestion)
+├── scripts/setup_db.sql (PostgreSQL schema)
 ├── docker-compose.yml (Redis + PostgreSQL)
-└── 검증: Goalserve API 호출 성공 + DB 적재 확인
+└── Validation: Goalserve API call success + DB insert verified
 ```
 
-### Sprint 2: Phase 1 — Offline Calibration (2~3주)
+### Sprint 2: Phase 1 — Offline Calibration (2~3 weeks)
 
 ```
-목표: 과거 데이터로 모델 파라미터를 학습한다
+Goal: train model parameters from historical data
 
 ├── src/calibration/step_1_1_intervals.py
 ├── src/calibration/step_1_2_Q_matrix.py
@@ -1357,13 +1357,13 @@ kalshi-soccer-quant/
 ├── src/calibration/step_1_4_nll.py (PyTorch)
 ├── src/calibration/step_1_5_validation.py
 ├── tests/unit/test_intervals.py, test_nll.py, test_Q_matrix.py
-└── 검증: Walk-Forward CV 통과, Brier Score < Pinnacle
+└── Validation: Walk-Forward CV passes, Brier Score < Pinnacle
 ```
 
-### Sprint 3: Phase 2 + 3 코어 (2~3주)
+### Sprint 3: Phase 2 + 3 Core (2~3 weeks)
 
 ```
-목표: 경기 시작 전 초기화 + 실시간 μ/P_true 계산
+Goal: pre-match initialization + real-time μ/P_true computation
 
 ├── src/prematch/ (Step 2.1~2.5)
 ├── src/engine/mc_core.py (Numba JIT)
@@ -1371,111 +1371,111 @@ kalshi-soccer-quant/
 ├── src/engine/step_3_4_pricing.py
 ├── src/engine/state_machine.py
 ├── tests/unit/test_remaining_mu.py, test_mc_core.py
-└── 검증: 과거 경기 리플레이로 P_true 산출 확인
+└── Validation: verify P_true output via historical replay
 ```
 
-### Sprint 4: Phase 3 이벤트 처리 + Phase 4 실행 (2~3주)
+### Sprint 4: Phase 3 Event Handling + Phase 4 Execution (2~3 weeks)
 
 ```
-목표: 이벤트 처리 + 트레이딩 시그널 + 주문 (PAPER)
+Goal: event handling + trading signals + order execution (PAPER)
 
 ├── src/goalserve/live_odds_source.py (WebSocket)
-├── src/goalserve/live_score_source.py (REST 폴링)
+├── src/goalserve/live_score_source.py (REST polling)
 ├── src/engine/step_3_3_event_handler.py
 ├── src/engine/ob_freeze.py
 ├── src/trading/ (Step 4.1~4.5)
 ├── src/kalshi/ (client, orderbook, execution)
 ├── tests/unit/test_edge_detection.py, test_kelly.py, test_exit_logic.py
-└── 검증: 과거 경기 리플레이로 시그널 + 가상 주문 생성 확인
+└── Validation: verify signal generation + simulated orders in replay
 ```
 
-### Sprint 5: 스케줄러 + 24/7 자동화 (1~2주)
+### Sprint 5: Scheduler + 24/7 Automation (1~2 weeks)
 
 ```
-목표: 킨 순간부터 자동으로 돌아간다
+Goal: fully automated operation from startup
 
 ├── src/scheduler/main.py
 ├── src/alerts/main.py
 ├── scripts/setup_systemd.sh
 ├── tests/integration/test_scheduler.py
-└── 검증: 스케줄러가 오늘 경기 스캔 → 엔진 스폰 → PAPER 트레이딩
+└── Validation: scheduler scans fixtures → spawns engine → PAPER trading
 ```
 
-### Sprint 6: 대시보드 (2~3주)
+### Sprint 6: Dashboard (2~3 weeks)
 
 ```
-목표: 실시간 모니터링 + 분석 뷰
+Goal: real-time monitoring + analytics view
 
 ├── src/dashboard/server.py
 ├── src/dashboard/frontend/ (React)
-│   ├── Layer 1: PriceChart + MatchHeader + EventLog (Phase 0 필수)
+│   ├── Layer 1: PriceChart + MatchHeader + EventLog (required in Phase 0)
 │   ├── Layer 2: RiskDashboard + PositionTable + PnLTimeline
-│   └── Layer 3: HealthDashboard (이후 Sprint에서 확장)
-└── 검증: 브라우저에서 실시간 데이터 확인
+│   └── Layer 3: HealthDashboard (expand in later sprints)
+└── Validation: confirm real-time data in browser
 ```
 
-### Sprint 7: 사후 분석 + 적응적 파라미터 (1~2주)
+### Sprint 7: Post-Analysis + Adaptive Parameters (1~2 weeks)
 
 ```
-목표: Step 4.6 자동화 + 피드백 루프
+Goal: automate Step 4.6 + feedback loop
 
 ├── src/analytics/ (daily, metrics, adaptive_params, reports)
-├── CRON 2 설정
-├── Slack/Telegram 알림 연동
-└── 검증: 일일 리포트 자동 생성 + Slack 수신
+├── CRON 2 setup
+├── Slack/Telegram alert integration
+└── Validation: daily report auto-generated + received in Slack
 ```
 
-### Sprint 8: Phase 0 PAPER 트레이딩 기간 (2~4주 운영)
+### Sprint 8: Phase 0 PAPER Trading Period (2~4 weeks ops)
 
 ```
-목표: 실제 경기에서 PAPER 모드로 시스템 검증
+Goal: validate system behavior on real matches in PAPER mode
 
-├── 실제 경기에서 24/7 PAPER 운영
-├── 가상 P&L 축적
-├── Preliminary 정확도 측정
-├── bet365 교차 검증 효과 측정
-├── 버그 수정 + 안정화
-└── 판정: Phase A 전환 기준 충족 여부
+├── Run 24/7 PAPER on live matches
+├── Accumulate hypothetical P&L
+├── Measure preliminary accuracy
+├── Measure bet365 cross-check effectiveness
+├── Bug fixes + stabilization
+└── Decision: does system meet Phase A transition criteria?
 ```
 
-### Sprint 9: Phase A LIVE 전환 (1주 준비 + 운영)
+### Sprint 9: Phase A LIVE Transition (1 week prep + operations)
 
 ```
-목표: 실제 돈으로 보수적 트레이딩 시작
+Goal: start conservative live trading with real capital
 
-├── config/system.live.yaml 설정
-├── trading_mode: "paper" → "live"
-├── K_frac = 0.25, z = 1.645
-├── Kalshi 실제 계좌 연동
-└── 모니터링 강화: Drawdown 알림 임계값 10%
+├── configure `config/system.live.yaml`
+├── `trading_mode`: "paper" → "live"
+├── `K_frac = 0.25`, `z = 1.645`
+├── connect Kalshi live account
+└── stronger monitoring: drawdown alert threshold 10%
 ```
 
 ---
 
-## 배포 체크리스트
+## Deployment Checklist
 
-### 서버 요구사항
+### Server Requirements
 
-| 항목 | 최소 사양 | 권장 사양 |
+| Item | Minimum Spec | Recommended Spec |
 |------|----------|----------|
 | CPU | 2 vCPU | 4 vCPU |
 | RAM | 4 GB | 8 GB |
 | Storage | 50 GB SSD | 100 GB SSD |
 | OS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS |
-| Network | 고정 IP (Goalserve 화이트리스트) | 고정 IP |
-| 위치 | US East (Kalshi 서버 근접) | US East |
+| Network | Static IP (Goalserve whitelist) | Static IP |
+| Location | US East (close to Kalshi servers) | US East |
 
-### 초기 배포 순서
+### Initial Deployment Sequence
 
 ```
-1. 서버 프로비저닝 + 고정 IP 확보
-2. Goalserve IP 화이트리스트 등록
-3. Redis + PostgreSQL 설치
-4. Python 3.11+ 환경 구성
-5. 코드 배포 + 의존성 설치
-6. DB 스키마 초기화 (scripts/setup_db.sql)
-7. Phase 1 최초 실행 (data/parameters/production 생성)
-8. systemd 서비스 등록 (scripts/setup_systemd.sh)
-9. 대시보드 React 빌드 + 서빙
-10. PAPER 모드로 시작 → Sprint 8 진입
+1. Provision server + secure static IP
+2. Register Goalserve IP whitelist
+3. Install Redis + PostgreSQL
+4. Set up Python 3.11+ environment
+5. Deploy code + install dependencies
+6. Initialize DB schema (`scripts/setup_db.sql`)
+7. Run initial Phase 1 (create `data/parameters/production`)
+8. Register systemd services (`scripts/setup_systemd.sh`)
+9. Build/serve dashboard React app
+10. Start in PAPER mode → enter Sprint 8
 ```

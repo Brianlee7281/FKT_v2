@@ -1,1309 +1,937 @@
-# Implementation Roadmap — 태스크 단위 구현 순서
+# Implementation Roadmap
 
-## 개요
+## How to Read This Document
 
-Blueprint의 9개 Sprint를 실제 코딩 가능한 **태스크 단위**로 분해한다.
-각 태스크는 의존성, 생성 파일, 검증 기준, 예상 소요를 포함한다.
+This roadmap is a **linear, dependency-ordered** sequence of work.
+Each step produces outputs that the next step consumes.
+Do not skip ahead — every step has a verification gate that must pass before proceeding.
 
-### 읽는 법
-
-```
-[S1-T3] ← Sprint 1, Task 3
-├── 의존: [S1-T1], [S1-T2]          ← 선행 태스크
-├── 파일: src/common/db_client.py    ← 생성/수정 파일
-├── 검증: pytest tests/unit/test_db.py PASS    ← 완료 기준
-└── 소요: 0.5일                      ← 예상 소요
-```
-
-### 전체 의존성 그래프 (간략)
+The entire system consists of 6 documents totaling ~7,000 lines of design specification.
+This roadmap translates those specs into concrete implementation tasks.
 
 ```
-S1 (인프라) ──▶ S2 (Phase 1) ──▶ S3 (Phase 2+3 코어) ──▶ S4 (이벤트+실행)
-                                                              │
-S1 ──────────────────────────────────────▶ S5 (스케줄러) ◀────┘
-                                              │
-S1 ──────────────────▶ S6 (대시보드) ◀────────┤
-                                              │
-S4 ──────────────────▶ S7 (분석) ◀────────────┘
-                           │
-                           ▼
-                    S8 (PAPER 운영) ──▶ S9 (LIVE 전환)
+Documents:
+├── phase1.md    (1,044 lines)  Offline Calibration
+├── phase2.md    (953 lines)    Pre-Match Initialization
+├── phase3.md    (1,342 lines)  Live Trading Engine
+├── phase4.md    (1,287 lines)  Arbitrage & Execution
+├── dashboard_design.md    (911 lines)    Dashboard
+└── blueprint.md (1,481 lines) 24/7 Automation Blueprint
 ```
 
 ---
 
-## Sprint 1: 기반 인프라 (1~2주)
+## Prerequisites
 
-> **목표:** 프로세스가 뜨고, 데이터가 흐르고, DB에 적재된다.
+### Accounts & API Keys
 
-### [S1-T1] 프로젝트 스캐폴딩 + 설정 로더 (0.5일)
+| Service | What You Need | How to Get It |
+|---------|--------------|---------------|
+| **Goalserve** | Full Soccer Package API key | Contact sales, request 14-day free trial first |
+| **Kalshi** | Trading API key + secret | Sign up at kalshi.com, enable API access |
+| **Slack** | Webhook URL for alerts | Create Slack app → Incoming Webhooks |
+| **Telegram** (optional) | Bot token + chat ID | @BotFather → /newbot |
 
-```
-의존: 없음 (최초 태스크)
-파일:
-  ├── pyproject.toml                  # 의존성 정의 (poetry)
-  ├── Makefile                        # make install, make test, make lint
-  ├── config/system.yaml              # 기본 설정
-  ├── config/system.paper.yaml        # PAPER 오버라이드
-  ├── config/secrets.env.example      # API 키 템플릿
-  ├── src/__init__.py
-  ├── src/common/__init__.py
-  └── src/common/config.py            # SystemConfig: YAML + env 로더
+### Server
 
-검증:
-  • from src.common.config import load_config
-  • config = load_config("config/system.yaml")
-  • assert config.goalserve.api_key is not None
+| Requirement | Minimum | Recommended |
+|-------------|---------|-------------|
+| CPU | 2 vCPU | 4 vCPU |
+| RAM | 4 GB | 8 GB |
+| Storage | 50 GB SSD | 100 GB SSD |
+| OS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS |
+| Network | **Static IP** (Goalserve whitelist) | US East (near Kalshi) |
+| Python | 3.11+ | 3.12 |
 
-핵심 의존성:
-  pyyaml, python-dotenv, pydantic (설정 검증)
-```
+> **Static IP is critical.** Goalserve uses IP-based authentication.
+> You must register your server's IP with Goalserve before any API calls work.
 
-### [S1-T2] 구조화 로깅 (0.5일)
+### Local Development Environment
 
-```
-의존: [S1-T1]
-파일:
-  └── src/common/logging.py           # structlog 기반 JSON 로거
-
-검증:
-  • log.info("test", match_id="123") → JSON 출력
-  • 파일 + stdout 동시 출력
-
-핵심 의존성:
-  structlog
-```
-
-### [S1-T3] Redis 클라이언트 + Pub/Sub (1일)
+You'll build and test locally first, then deploy to the server.
 
 ```
-의존: [S1-T1]
-파일:
-  ├── docker-compose.yml              # Redis + PostgreSQL 컨테이너
-  └── src/common/redis_client.py      # 비동기 Redis Pub/Sub 래퍼
-
-검증:
-  • docker compose up -d
-  • await redis.publish("test", "hello")
-  • await redis.subscribe("test") → "hello" 수신
-  • pytest tests/unit/test_redis.py
-
-핵심 의존성:
-  redis[hiredis], docker
-```
-
-### [S1-T4] PostgreSQL 클라이언트 + 스키마 (1일)
-
-```
-의존: [S1-T1], [S1-T3] (docker-compose)
-파일:
-  ├── scripts/setup_db.sql            # 전체 테이블 스키마 (Blueprint 참조)
-  └── src/common/db_client.py         # asyncpg 래퍼 (CRUD 헬퍼)
-
-검증:
-  • psql -f scripts/setup_db.sql → 에러 없음
-  • await db.upsert_match_job(...) → match_jobs 테이블에 행 삽입
-  • pytest tests/unit/test_db.py
-
-핵심 의존성:
-  asyncpg, psycopg2 (마이그레이션용)
-```
-
-### [S1-T5] 공유 데이터 타입 정의 (0.5일)
-
-```
-의존: [S1-T1]
-파일:
-  └── src/common/types.py
-
-내용:
-  @dataclass NormalizedEvent       # type, source, confidence, score, team, ...
-  @dataclass Signal                # direction, EV, P_cons, P_kalshi, alignment_status, ...
-  @dataclass IntervalRecord        # match_id, t_start, t_end, state_X, delta_S, ...
-  @dataclass TradeLog              # Phase 4 v2 전체 필드
-  @dataclass Position              # direction, entry_price, quantity, ...
-  @dataclass SanityResult          # verdict, delta_match_winner, delta_over_under
-  @dataclass MarketAlignment       # status, kelly_multiplier
-  enum TradingMode                 # PAPER, LIVE
-  enum EnginePhase                 # FIRST_HALF, HALFTIME, SECOND_HALF, FINISHED
-  enum EventState                  # IDLE, PRELIMINARY_DETECTED, CONFIRMED
-
-검증:
-  • 모든 타입 import 성공
-  • dataclass 직렬화/역직렬화 (json.dumps/loads)
-```
-
-### [S1-T6] Goalserve REST 클라이언트 (2일)
-
-```
-의존: [S1-T1], [S1-T2]
-파일:
-  ├── src/goalserve/__init__.py
-  ├── src/goalserve/client.py         # GoalserveClient (Fixtures, Stats, Odds)
-  └── src/goalserve/parsers.py        # JSON → 내부 타입 변환
-
-구현할 메서드:
-  • get_fixtures(league_id, date) → List[MatchFixture]
-  • get_match_stats(match_id) → MatchStats (player_stats 포함)
-  • get_odds(league_id, date) → List[MatchOdds]
-  • get_live_scores() → List[LiveMatch]
-
-검증:
-  • Goalserve Trial API로 실제 호출
-  • fixtures = await client.get_fixtures("1204", "01.03.2025")
-  • assert len(fixtures) > 0
-  • pytest tests/integration/test_goalserve_client.py
-
-주의:
-  • IP 화이트리스트 등록 선행 필요
-  • Rate limit 확인 (Trial 제한)
-```
-
-### [S1-T7] 데이터 수집기 — 과거 데이터 적재 시작 (1.5일)
-
-```
-의존: [S1-T4], [S1-T6]
-파일:
-  ├── src/data/__init__.py
-  └── src/data/collector.py           # DataCollector
-
-구현:
-  • collect_historical_season(league_id, season) → DB에 historical_matches 적재
-  • collect_yesterday_results() → 어제 경기 결과 적재
-  • verify_data_integrity() → 무결성 검증
-
-검증:
-  • EPL 2023-24 시즌 전체 경기 적재
-  • SELECT COUNT(*) FROM historical_matches WHERE league_id='1204' → 380
-  • player_stats JSONB가 비어있지 않은 경기 비율 확인
-
-중요:
-  • 이 태스크 완료 후 바로 과거 5시즌 데이터 수집을 백그라운드로 시작
-  • Sprint 2 시작 전까지 최소 2시즌 적재 목표
-```
-
-### Sprint 1 완료 기준
-
-```
-□ docker compose up → Redis + PostgreSQL 정상 기동
-□ Goalserve API 호출 성공 (Fixtures, Stats, Odds)
-□ 최소 1시즌 과거 데이터 DB 적재 완료
-□ Redis Pub/Sub 메시지 송수신 확인
-□ 모든 단위 테스트 통과
+Local machine:
+├── Python 3.11+
+├── Docker Desktop (for Redis + PostgreSQL)
+├── Node.js 18+ (for React dashboard)
+├── Git
+└── IDE (VS Code recommended)
 ```
 
 ---
 
-## Sprint 2: Phase 1 — Offline Calibration (2~3주)
+## Phase 0: Foundation (Weeks 1–2)
 
-> **목표:** 과거 데이터로 모델 파라미터(b, γ, δ, Q)를 학습한다.
+**Goal:** Project skeleton boots up, infrastructure runs, Goalserve data flows into DB.
 
-### [S2-T1] Step 1.1: 구간 분할 (2일)
+### Step 0.1: Project Scaffold
 
-```
-의존: [S1-T5], [S1-T7] (데이터 적재 완료)
-파일:
-  ├── src/calibration/__init__.py
-  └── src/calibration/step_1_1_intervals.py
+Create the folder structure from the blueprint:
 
-구현:
-  • build_intervals_from_goalserve(match_data) → List[IntervalRecord]
-  • parse_minute(minute_str, extra_min_str) → float
-  • resolve_scoring_team(goal_event, recorded_team) → str (자책골 반전)
-  • VAR 취소골 필터링 (var_cancelled == "True")
-  • 하프타임 구간 처리 (is_halftime 플래그)
-  • 전체 DB에서 배치 변환: build_all_intervals(db) → List[IntervalRecord]
+```bash
+mkdir -p kalshi-soccer-quant/{config,data/{parameters,cache},src/{common,goalserve,kalshi,calibration/{features},prematch,engine,trading,analytics,scheduler,data,alerts,dashboard/{api,frontend}},scripts,tests/{unit,integration,replay},docs,logs}
 
-검증:
-  • 2022 월드컵 결승 수동 검증 (문서의 데이터 변환 예시와 정확히 일치)
-  • VAR 취소골이 있는 경기에서 올바르게 제외되는지
-  • 자책골의 득점 팀 반전 검증
-  • pytest tests/unit/test_intervals.py
-    - test_basic_interval_split
-    - test_var_cancelled_goal_excluded
-    - test_own_goal_team_reversal
-    - test_halftime_excluded
-    - test_added_time_T_m
+cd kalshi-soccer-quant
+touch src/__init__.py src/{common,goalserve,kalshi,calibration,prematch,engine,trading,analytics,scheduler,data,alerts,dashboard}/__init__.py
+touch src/calibration/features/__init__.py
+touch src/dashboard/api/__init__.py
 ```
 
-### [S2-T2] Step 1.2: Q 행렬 추정 (1일)
+Initialize Python project:
 
-```
-의존: [S2-T1]
-파일:
-  └── src/calibration/step_1_2_Q_matrix.py
-
-구현:
-  • reconstruct_markov_path(match_data) → List[(minute, state)]
-  • estimate_Q_matrix(intervals, config) → np.ndarray (4×4)
-  • 상태별 체류 시간 계산 (하프타임 제외)
-  • 희소 상태 처리 (가산 가정: q_{1→3} ≈ q_{0→2})
-  • Q_off 정규화: normalize_Q_off(Q) → np.ndarray (4×4)
-
-검증:
-  • Q 대각 성분 = -Σ 비대각 (행 합 = 0)
-  • 모든 비대각 성분 ≥ 0
-  • Q_off_normalized 각 행 합 ≈ 1.0
-  • pytest tests/unit/test_Q_matrix.py
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install poetry
+poetry init
 ```
 
-### [S2-T3] Step 1.3: 피처 엔지니어링 — Tier 1~4 (3일)
+Core dependencies:
 
-```
-의존: [S1-T7] (데이터 적재)
-파일:
-  ├── src/calibration/features/__init__.py
-  ├── src/calibration/features/tier1_team.py       # 팀 롤링 (xG, shots, possession)
-  ├── src/calibration/features/tier2_player.py     # 선수 집계 (rating, keyPasses)
-  ├── src/calibration/features/tier3_odds.py       # 배당 (Pinnacle, 시장 평균)
-  └── src/calibration/features/tier4_context.py    # H/A, 휴식일, H2H
+```toml
+# pyproject.toml [tool.poetry.dependencies]
+python = "^3.11"
 
-각 Tier별:
-  • build_tier{N}_features(match_id, db) → dict
-  • 결측값 처리 (빈 문자열, None → NaN)
-  • minutes_played < 10 필터링 (Tier 2)
+# Data & ML
+numpy = "^1.26"
+scipy = "^1.12"
+pandas = "^2.2"
+xgboost = "^2.0"
+torch = "^2.2"
+numba = "^0.59"
 
-검증:
-  • 특정 경기의 피처 벡터를 수동 계산과 비교
-  • NaN 비율 확인 (Tier 2에서 선수 데이터 가용성)
-  • Tier 3: Pinnacle이 없는 경기에서 시장 평균으로 fallback
-  • pytest tests/unit/test_features.py
-```
+# Async & HTTP
+httpx = "^0.27"
+websockets = "^12.0"
+aiohttp = "^3.9"
 
-### [S2-T4] Step 1.3: XGBoost Poisson 학습 (2일)
+# Infrastructure
+redis = "^5.0"
+asyncpg = "^0.29"
+sqlalchemy = "^2.0"
+psycopg2-binary = "^2.9"
 
-```
-의존: [S2-T3]
-파일:
-  └── src/calibration/step_1_3_ml_prior.py
+# Scheduling
+apscheduler = "^3.10"
 
-구현:
-  • build_training_dataset(db, config) → X, y_home, y_away
-  • train_poisson_model(X, y) → xgb.Booster
-  • select_features(model) → feature_mask (누적 중요도 95%)
-  • save_model(model, path), save_feature_mask(mask, path)
-  • predict_expected_goals(X_match) → (μ_H, μ_A)
+# Dashboard
+fastapi = "^0.109"
+uvicorn = "^0.27"
 
-검증:
-  • 학습 세트 Poisson deviance 감소 확인
-  • feature_mask.json에 10~30개 피처 선택됨
-  • predict 출력이 합리적 범위 (0.5 < μ < 4.0)
-  • pytest tests/unit/test_ml_prior.py
+# Utilities
+pyyaml = "^6.0"
+python-dotenv = "^1.0"
+structlog = "^24.1"
 ```
 
-### [S2-T5] Step 1.4: NLL 최적화 (4일) ⭐ 핵심 태스크
+**Verification:** `poetry install` completes without errors.
 
-```
-의존: [S2-T1], [S2-T2], [S2-T4]
-파일:
-  └── src/calibration/step_1_4_nll.py
+### Step 0.2: Infrastructure
 
-구현:
-  • NLLModel(nn.Module): forward() → loss
-    - 학습 파라미터: a_H[M], a_A[M], b[6], γ^H[2], γ^A[2], δ_H[4], δ_A[4]
-    - 홈/어웨이 골 분리 NLL
-    - 자책골 점 이벤트 제외
-    - ML Prior 정규화 + L2 정규화
-  • 파라미터 클램핑 (b, γ^H, γ^A, δ_H, δ_A 범위)
-  • Multi-start 최적화 (5~10 시드)
-  • 2단계: Adam 1000 epochs → L-BFGS fine-tuning
-  • joint_nll_optimization(intervals, ml_model, Q, config) → params
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    volumes: ["redis_data:/data"]
 
-검증:
-  • NLL이 수렴하는지 (loss curve 단조 감소)
-  • γ^H_1 < 0, γ^H_2 > 0, γ^A_1 > 0, γ^A_2 < 0 (부호 검증)
-  • δ_H(+1) < 0, δ_A(+1) > 0 (부호 검증)
-  • b의 전후반 비중이 실제 슈팅 비중과 ±10%
-  • Multi-start에서 최저 NLL 시드가 일관되게 유사한 파라미터
-  • pytest tests/unit/test_nll.py
-    - test_nll_gradient_check (수치 미분 vs 자동 미분)
-    - test_nll_convergence
-    - test_gamma_sign_constraints
-    - test_delta_sign_constraints
-    - test_own_goal_excluded_from_point_events
+  postgres:
+    image: timescale/timescaledb:latest-pg16
+    ports: ["5432:5432"]
+    environment:
+      POSTGRES_USER: kalshi
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: kalshi
+    volumes: ["pg_data:/var/lib/postgresql/data"]
+
+volumes:
+  redis_data:
+  pg_data:
 ```
 
-### [S2-T6] Step 1.5: Validation (2일)
-
-```
-의존: [S2-T5]
-파일:
-  └── src/calibration/step_1_5_validation.py
-
-구현:
-  • walk_forward_cv(intervals, config) → ValidationReport
-    - 3-Fold 시계열 CV
-    - 각 Fold에서 Step 1.3 + 1.4 재실행
-  • compute_brier_score(P_pred, outcomes) → float
-  • compute_pinnacle_baseline(odds_db) → float
-  • compute_calibration_data(P_pred, outcomes, n_bins=10) → dict
-  • multi_market_validation(μ_H, μ_A, odds_db) → dict (1X2 + O/U + BTTS)
-  • gamma_sign_check(params) → bool
-  • delta_lrt(params_with_delta, params_without) → (LR_stat, p_value)
-  • b_half_ratio_check(b, stats_db) → float (discrepancy)
-
-검증:
-  • ΔBS < 0 (모델이 Pinnacle보다 나음)
-  • Calibration plot이 대각선 ±5% 이내
-  • 3개 Fold 모두에서 시뮬레이션 수익 양수
-  • 다중 마켓 (1X2, O/U, BTTS) 모두 시장 대비 개선
-  • Go/No-Go 판정 자동화
+```bash
+docker-compose up -d
+psql -h localhost -U kalshi -d kalshi -f scripts/setup_db.sql
 ```
 
-### [S2-T7] Phase 1 오케스트레이터 + 파라미터 저장 (1일)
+The `setup_db.sql` file contains all tables from the blueprint
+(match_jobs, trade_logs, positions, daily_analytics, event_logs, tick_snapshots,
+param_versions, historical_matches).
+
+**Verification:**
+- `redis-cli ping` → PONG
+- `psql -h localhost -U kalshi -c "SELECT 1"` → OK
+- All 8 tables exist: `\dt` confirms
+
+### Step 0.3: Common Utilities
+
+Build `src/common/` — the shared foundation everything else depends on:
 
 ```
-의존: [S2-T6]
-파일:
-  └── src/calibration/recalibrate.py
-
-구현:
-  • Recalibrator.run(trigger_reason) → 전체 파이프라인
-  • deploy_parameters(params, feature_mask, Q) → version string
-  • 심볼릭 링크 업데이트 (data/parameters/production)
-  • Redis hot-reload 시그널 발송
-
-검증:
-  • python -m src.calibration.recalibrate --reason "initial"
-  • data/parameters/production/params.json 존재
-  • data/parameters/production/xgboost.xgb 존재
-  • data/parameters/production/validation_report.json의 verdict == "GO"
+src/common/
+├── config.py          # SystemConfig: loads YAML + env vars
+├── logging.py         # Structured logging (structlog)
+├── redis_client.py    # Async Redis pub/sub wrapper
+├── db_client.py       # Async PostgreSQL wrapper (asyncpg)
+└── types.py           # Shared data types
 ```
 
-### Sprint 2 완료 기준
+**config.py** — Load `config/system.yaml` and merge with environment variables:
+
+```python
+class SystemConfig:
+    def __init__(self, config_path="config/system.yaml"):
+        with open(config_path) as f:
+            raw = yaml.safe_load(f)
+        self.goalserve_api_key = os.environ["GOALSERVE_API_KEY"]
+        self.kalshi_api_key = os.environ["KALSHI_API_KEY"]
+        self.trading_mode = raw["trading_mode"]
+        self.target_leagues = raw["target_leagues"]
+        # ... etc
+```
+
+**types.py** — Define all shared data structures referenced across phases:
+
+```python
+@dataclass
+class NormalizedEvent: ...
+@dataclass
+class Signal: ...
+@dataclass
+class IntervalRecord: ...
+@dataclass
+class TradeLog: ...
+@dataclass
+class PreMatchData: ...
+```
+
+**Verification:**
+- `SystemConfig("config/system.yaml")` loads without error
+- Redis pub/sub round-trip works (publish → subscribe → receive)
+- DB insert + select round-trip works
+
+### Step 0.4: Goalserve REST Client
+
+Build `src/goalserve/client.py` — the gateway to all Goalserve data:
+
+```python
+class GoalserveClient:
+    """REST client for Goalserve Fixtures, Stats, and Odds APIs."""
+
+    async def get_fixtures(self, league_id: str, date: str) -> List[dict]: ...
+    async def get_match_stats(self, match_id: str) -> dict: ...
+    async def get_odds(self, league_id: str) -> List[dict]: ...
+```
+
+Also build `src/goalserve/parsers.py` — transform Goalserve's raw JSON
+into internal types:
+
+```python
+def parse_goals(summary: dict) -> List[GoalEvent]: ...
+def parse_red_cards(summary: dict) -> List[RedCardEvent]: ...
+def parse_player_stats(player_stats: dict) -> List[PlayerStats]: ...
+def parse_team_stats(stats: dict) -> TeamStats: ...
+def parse_odds(bookmakers: List[dict]) -> OddsFeatures: ...
+```
+
+**Verification:**
+- Fetch today's fixtures for EPL → returns match list
+- Fetch a completed match's stats → returns player-level data
+- Fetch odds for a league → returns 20+ bookmakers
+- `var_cancelled` field is present in goal events (check with trial data)
+- `addedTime_period1/2` fields are present in matchinfo
+
+> **CRITICAL CHECKS during Goalserve trial period (14 days):**
+> 1. Does `summary.redcards` include second-yellow dismissals?
+> 2. How far back does `player_stats` historical data go? (Need 3+ seasons)
+> 3. Does the xG field exist in `stats`? What's the exact field name?
+> 4. What's the stable match ID? (`static_id` vs `id`)
+> 5. What are the exact `period` string values in Live Odds? ("1st Half" vs "1st" vs "First Half")
+> 6. What are the exact market IDs? ("1777" for Fulltime Result — verify)
+>
+> **Document all findings.** These field mappings feed into every parser.
+
+### Step 0.5: Historical Data Backfill
+
+Build `src/data/collector.py` and run the initial backfill:
+
+```python
+class DataCollector:
+    async def backfill_historical(self, league_id: str, seasons: List[str]):
+        """One-time backfill of 3-5 seasons of historical data."""
+        for season in seasons:
+            fixtures = await self.goalserve.get_fixtures(league_id, season)
+            for match in fixtures:
+                await self.db.upsert_match_result(match)
+                stats = await self.goalserve.get_match_stats(match["id"])
+                if stats:
+                    await self.db.upsert_match_stats(match["id"], stats)
+            await asyncio.sleep(1)  # Respect rate limits
+```
+
+```bash
+python -m src.data.collector --backfill --leagues 1204,1399 --seasons 2020,2021,2022,2023,2024
+```
+
+**Verification:**
+- `SELECT COUNT(*) FROM historical_matches` → 3,000+ matches
+- Spot-check 5 matches: goals, red cards, addedTime, player_stats all present
+- No NULL `addedTime_period1` fields (or document which leagues lack them)
+
+---
+
+## Phase 1: Offline Calibration (Weeks 3–5)
+
+**Goal:** Learn all MMPP parameters from historical data. This is the mathematical core.
+
+### Step 1.1: Interval Splitting
+
+**Reference:** phase1_goalserve_v1.md → Step 1.1
+
+Build `src/calibration/step_1_1_intervals.py`:
 
 ```
-□ 최소 3시즌 데이터로 Step 1.1~1.5 전체 파이프라인 실행 성공
-□ Walk-Forward CV 3개 Fold 모두 통과
-□ ΔBS < 0 (Pinnacle 대비 개선)
-□ γ 부호 4개 모두 올바름
-□ data/parameters/production/ 에 프로덕션 파라미터 저장
-□ 모든 단위 테스트 통과 (test_intervals, test_Q, test_nll 등)
+Input:  historical_matches table (3,000+ matches)
+Output: List[IntervalRecord] — hundreds of thousands of intervals
+```
+
+Key implementation details:
+- Filter out `var_cancelled=True` goals
+- Handle `owngoal=True` (invert scoring team, exclude from NLL point-event term)
+- Parse `extra_min` for stoppage-time goals (minute=90, extra_min=3 → t=93)
+- Calculate `T_m = 90 + addedTime_period1 + addedTime_period2`
+- Exclude halftime interval from integration
+- For each goal, record `delta_S_before` (score diff **before** the goal, not after)
+
+```
+tests/unit/test_intervals.py
+├── test_basic_match_no_events()
+├── test_single_goal_creates_two_intervals()
+├── test_var_cancelled_goal_excluded()
+├── test_own_goal_team_inversion()
+├── test_red_card_state_transition()
+├── test_halftime_excluded_from_integration()
+├── test_added_time_T_m_calculation()
+├── test_world_cup_final_2022()          ← complex match with 6 goals
+└── test_delta_S_before_at_goal_time()   ← causal ordering
+```
+
+**Verification:** All tests pass. Run on full dataset, inspect 10 random matches manually.
+
+### Step 1.2: Q Matrix Estimation
+
+**Reference:** phase1_goalserve_v1.md → Step 1.2
+
+Build `src/calibration/step_1_2_Q_matrix.py`:
+
+```
+Input:  IntervalRecords with X(t) state paths
+Output: Q matrix (4×4), Q_off_normalized (4×4)
+```
+
+```
+tests/unit/test_Q_matrix.py
+├── test_no_red_cards_Q_near_zero()
+├── test_single_red_card_counted()
+├── test_diagonal_sum_zero()              ← q_ii = -Σ q_ij
+├── test_Q_off_normalized_rows_sum_to_1()
+└── test_additivity_state_3()
+```
+
+**Verification:** Red card rates are ~0.02-0.05 per 90 min (roughly 1 per 20-50 matches).
+
+### Step 1.3: ML Prior (XGBoost)
+
+**Reference:** phase1_goalserve_v1.md → Step 1.3
+
+Build feature engineering pipeline:
+
+```
+src/calibration/features/
+├── tier1_team.py       # Team rolling stats (xG, shots, possession, etc.)
+├── tier2_player.py     # Player-level aggregation (rating, key passes, etc.)
+├── tier3_odds.py       # Odds features (Pinnacle, market avg, std)
+└── tier4_context.py    # Context (home/away, rest days, H2H)
+```
+
+Build `src/calibration/step_1_3_ml_prior.py`:
+
+```
+Input:  historical_matches + features
+Output: XGBoost model (.xgb), feature_mask.json, median_values.json
+```
+
+- Target: goals per team per match
+- Objective: `count:poisson`
+- Feature selection: top 95% cumulative importance (gain-based)
+
+> **Fallback:** If `player_stats` only goes back 2 seasons,
+> train Tier 2 on recent data only. Older matches use Tier 1 + 3.
+
+```
+tests/unit/test_ml_prior.py
+├── test_poisson_output_positive()
+├── test_feature_mask_subset_of_full()
+├── test_home_advantage_captured()
+├── test_prediction_in_reasonable_range()   ← 0.5 < μ < 4.0
+└── test_median_values_no_nans()
+```
+
+**Verification:** Mean predicted goals ≈ actual league average (~1.3-1.5 per team per match for EPL).
+
+### Step 1.4: Joint NLL Optimization
+
+**Reference:** phase1_goalserve_v1.md → Step 1.4
+
+Build `src/calibration/step_1_4_nll.py` using PyTorch:
+
+```python
+class MMPPLoss(nn.Module):
+    """
+    Parameters: a_H[M], a_A[M], b[6], γ^H[2], γ^A[2], δ_H[4], δ_A[4]
+    Total: 2M + 18 free parameters
+    """
+    ...
+```
+
+Key implementation:
+- Multi-start (5-10 seeds), keep best
+- Adam (lr=1e-3, 1000 epochs) → L-BFGS
+- Clamping after each step (see Phase 1 doc clamping table)
+- Own-goals excluded from Σ ln λ term
+
+```
+tests/unit/test_nll.py
+├── test_nll_decreases_during_training()
+├── test_b_clamped_within_bounds()          ← |b_i| ≤ 0.5
+├── test_gamma_H_signs()                    ← γ^H_1 < 0, γ^H_2 > 0
+├── test_gamma_A_signs()                    ← γ^A_1 > 0, γ^A_2 < 0
+├── test_delta_zero_at_draw()               ← δ(0) = 0 fixed
+├── test_delta_H_clamp_ranges()
+├── test_delta_A_clamp_ranges()             ← v1 fix: δ_A bounds defined
+├── test_own_goal_excluded_from_point_nll()
+└── test_multi_start_best_selected()
+```
+
+**Verification:** γ signs match football intuition. b profile shows late-game intensity increase (b_6 > b_4).
+
+### Step 1.5: Validation
+
+**Reference:** phase1_goalserve_v1.md → Step 1.5
+
+Build `src/calibration/step_1_5_validation.py`:
+
+Walk-Forward CV. Train on seasons 1-3, validate on season 4. Repeat.
+
+Metrics:
+- Calibration plot (reliability diagram)
+- Brier Score vs Pinnacle close line
+- Multi-market cross-validation (1X2 + O/U 2.5 + BTTS)
+- γ sign verification, δ LRT
+- b half-ratio vs actual shots ratio
+- Simulation P&L
+
+**Go/No-Go criteria (all must pass):**
+
+| Criterion | Threshold |
+|-----------|-----------|
+| Calibration | Diagonal ±5% |
+| ΔBS vs Pinnacle | < 0 (model beats market) |
+| Multi-market BS | All markets improved |
+| Sim Max Drawdown | < 20% |
+| All CV folds | Positive sim P&L |
+| γ signs | All 4 correct |
+| δ LRT | p < 0.05 (or drop δ) |
+
+Save production parameters:
+
+```
+data/parameters/YYYYMMDD_HHMMSS/
+├── params.json           ← b, γ^H, γ^A, δ_H, δ_A
+├── Q.npy                 ← Q matrix (4×4)
+├── xgboost.xgb           ← XGBoost weights
+├── feature_mask.json      ← selected feature names
+├── median_values.json     ← for missing value imputation
+└── validation_report.json ← all metrics
+```
+
+Symlink: `data/parameters/production → ./YYYYMMDD_HHMMSS/`
+
+**Verification:** All criteria pass. If any fail → iterate on Step 1.3 or 1.4.
+
+---
+
+## Phase 2: Pre-Match Pipeline (Weeks 5–6)
+
+**Goal:** Given a match ID, automatically produce a ready-to-trade model instance.
+
+### Step 2.1: Data Collection
+
+**Reference:** phase2_goalserve_v1.md → Step 2.1
+
+Build `src/prematch/step_2_1_data_collection.py`:
+
+```
+Input:  match_id
+Output: PreMatchData (lineups, player rolling, team rolling, odds, context)
+```
+
+- Fetch lineup from Live Game Stats (60 min before kickoff)
+- For each starting player, query last 5 matches from DB
+- Aggregate by position group (FW/MF/DF/GK)
+- Fetch team rolling stats and current pregame odds
+- Same Goalserve IDs as Phase 1 — no mapping needed
+
+```
+tests/integration/test_data_collection.py
+├── test_lineup_fetch_returns_22_players()
+├── test_player_rolling_excludes_short_appearances()  ← mp < 10 filtered
+├── test_odds_features_pinnacle_present()
+├── test_feature_names_match_phase1_mask()             ← CRITICAL
+└── test_prematch_data_no_none_fields()
+```
+
+### Step 2.2–2.3: Feature Selection + a Parameter
+
+Build `src/prematch/step_2_2_feature_selection.py` and `step_2_3_a_parameter.py`:
+
+```
+Input:  PreMatchData + feature_mask.json + xgboost.xgb
+Output: a_H, a_A, C_time
+```
+
+Apply mask → XGBoost inference → a = ln(μ̂) - ln(C_time).
+
+**Verification:** a values in reasonable range (roughly -4 to -2).
+
+### Step 2.4: Sanity Check
+
+Build `src/prematch/step_2_4_sanity_check.py`:
+
+Two-level: Match Winner vs Pinnacle (primary) + Over/Under cross-check (secondary).
+
+**Verification:** Run against 20 past matches. GO for normal, SKIP for extreme outliers.
+
+### Step 2.5: Initialization
+
+Build `src/prematch/step_2_5_initialization.py`:
+
+- Load Phase 1 params, compute P_grid + P_fine_grid
+- Numba JIT warmup
+- Set initial state: t=0, X=0, S=(0,0)
+
+**Verification:** Model instance created. Numba warmup < 3s.
+
+---
+
+## Phase 3: Live Engine Core (Weeks 6–8)
+
+**Goal:** Process real-time events and produce P_true every second.
+
+### Step 3.1: Event Sources
+
+**Reference:** phase3_goalserve_v1.md → Step 3.1
+
+Build the two Goalserve sources:
+
+```
+src/goalserve/live_odds_source.py    # WebSocket, <1s
+src/goalserve/live_score_source.py   # REST polling, 3s
+```
+
+```
+tests/integration/test_live_odds_source.py
+├── test_websocket_connects()
+├── test_score_change_yields_event()
+├── test_odds_spike_yields_event()
+├── test_period_change_yields_event()
+├── test_reconnect_on_disconnect()
+└── test_score_rollback_yields_event()
+
+tests/integration/test_live_score_source.py
+├── test_poll_returns_data()
+├── test_goal_diff_detected()
+├── test_red_card_diff_detected()
+├── test_5_failures_yields_source_failure()
+└── test_var_cancelled_field_present()
+```
+
+**Verification:** Connect to a live match. Observe score change via WebSocket < 1s.
+
+### Step 3.2: State Machine + Event Handlers
+
+Build `src/engine/state_machine.py` and `src/engine/step_3_3_event_handler.py`:
+
+```
+IDLE → PRELIMINARY → CONFIRMED → COOLDOWN → IDLE
+                   → FALSE_ALARM → IDLE
+                   → VAR_CANCELLED → IDLE
+```
+
+```
+tests/unit/test_event_handler.py
+├── test_preliminary_sets_ob_freeze()
+├── test_confirmed_goal_updates_S_and_deltaS()
+├── test_confirmed_goal_applies_delta_H_and_A()
+├── test_var_cancelled_rolls_back_state()
+├── test_red_card_transitions_X_correctly()
+├── test_red_card_applies_both_gamma_H_and_A()
+├── test_cooldown_blocks_order_allowed()
+├── test_false_alarm_after_timeout()
+└── test_preliminary_cache_reused_on_confirm()
+```
+
+### Step 3.3: MC Core (Numba)
+
+Build `src/engine/mc_core.py`:
+
+```python
+@njit(cache=True)
+def mc_simulate_remaining(...):
+    """Returns final_scores shape (N, 2). Must be < 1ms for N=50,000."""
+```
+
+```
+tests/unit/test_mc_core.py
+├── test_output_shape_N_by_2()
+├── test_deterministic_with_same_seed()
+├── test_scores_non_negative()
+├── test_mean_matches_analytical_at_X0_dS0()
+├── test_red_card_state_reduces_goals()
+├── test_performance_under_1ms()               ← N=50000
+└── test_delta_shifts_distribution()
+```
+
+### Step 3.4: Hybrid Pricing + Stoppage Time
+
+Build `src/engine/step_3_4_pricing.py` and `src/engine/step_3_5_stoppage.py`.
+
+### Step 3.5: Replay Engine
+
+Build `tests/replay/replay_engine.py`:
+
+```python
+class ReplayEngine:
+    """Replays a historical match through Phase 3 using stored events."""
+    async def replay(self, match_id: str) -> List[Snapshot]: ...
+```
+
+**This is your primary debugging tool.** Use it constantly.
+
+**Verification:** Replay 2022 World Cup Final. P_true changes correctly after all 6 goals.
+
+---
+
+## Phase 4: Execution Layer (Weeks 8–9)
+
+**Goal:** Turn P_true into trades (paper first). All v2 fixes applied.
+
+### Step 4.1: Kalshi Client + OrderBook
+
+Build `src/kalshi/client.py` and `src/kalshi/orderbook.py`:
+
+OrderBookSync must implement:
+- `compute_vwap_buy(qty)` — ask-side VWAP
+- `compute_vwap_sell(qty)` — bid-side VWAP
+
+**Verification:** VWAP calculation matches manual computation on real orderbook.
+
+### Step 4.2: Signal Generation (2-Pass VWAP)
+
+**Reference:** phase4_goalserve_v2.md → Step 4.2
+
+Build `src/trading/step_4_2_edge_detection.py`:
+
+```
+tests/unit/test_edge_detection.py
+├── test_buy_yes_P_cons_is_lower_bound()       ← P_true - z*σ
+├── test_buy_no_P_cons_is_upper_bound()        ← P_true + z*σ
+├── test_vwap_pass2_reduces_EV()               ← final_EV ≤ rough_EV
+├── test_alignment_ALIGNED_multiplier_0_8()    ← NOT 1.0
+├── test_alignment_DIVERGENT_multiplier_0_5()
+├── test_hold_when_vwap_kills_edge()           ← pass 2 gate
+└── test_buy_no_EV_formula()                   ← (1-Pc)(1-c)P - Pc(1-P)
+```
+
+### Step 4.3: Kelly + Risk Limits
+
+Build `src/trading/step_4_3_position_sizing.py` and `src/trading/risk_manager.py`:
+
+```
+tests/unit/test_kelly.py
+├── test_buy_yes_W_L_correct()
+├── test_buy_no_W_is_Pkalshi_times_1minusc()   ← W = (1-c)*P_kalshi
+├── test_buy_no_L_is_1_minus_Pkalshi()          ← L = 1 - P_kalshi
+├── test_alignment_multiplier_applied()
+├── test_3_layer_limits_enforced()
+└── test_match_cap_pro_rata()
+```
+
+### Step 4.4: Exit Logic (v2 Fixes)
+
+**Reference:** phase4_goalserve_v2.md → Step 4.4
+
+Build `src/trading/step_4_4_exit_logic.py`:
+
+```
+tests/unit/test_exit_logic.py
+
+# ── v2 Fix #1: Edge Reversal Buy No ──
+├── test_reversal_buy_no_uses_P_kalshi_bid()
+│   → threshold = P_kalshi_bid + θ  (NOT 1-P_kalshi_bid + θ)
+├── test_reversal_buy_no_fires_at_correct_level()
+│   → bid=0.40, θ=0.02: fires when P_cons > 0.42 (NOT 0.62)
+
+# ── v2 Fix #2: Expiry Eval Buy No ──
+├── test_expiry_buy_no_E_hold_formula()
+│   → E_hold = (1-Pc)(1-c)*entry - Pc*(1-entry)
+├── test_expiry_buy_no_profitable_position_not_closed()
+│   → entry=0.40, Pc=0.35: E_hold > 0, no exit triggered
+├── test_expiry_buy_no_losing_position_closed()
+│   → entry=0.40, Pc=0.65: E_hold < E_exit, exit triggered
+
+# ── v2 Fix #3: bet365 Divergence Buy No ──
+├── test_divergence_buy_no_uses_entry_price()
+│   → threshold = entry_price + 0.05  (NOT 1-entry + 0.05)
+├── test_divergence_buy_no_fires_at_5pp()
+│   → entry=0.40: fires when P_bet365 > 0.45 (NOT 0.65)
+
+# ── General ──
+├── test_edge_decay_below_half_cent()
+├── test_reversal_buy_yes_works()
+└── test_divergence_buy_yes_works()
+```
+
+> **These are the most important unit tests in the entire system.**
+> The v2 Buy No fixes prevent systematic money loss.
+> Run them after every change to Step 4.4.
+
+### Step 4.5: Execution (Paper v2)
+
+Build `src/kalshi/execution.py`:
+
+```
+tests/unit/test_execution.py
+├── test_paper_uses_vwap_not_best_ask()
+├── test_paper_adds_1tick_slippage()
+├── test_paper_partial_fill_when_depth_low()
+└── test_paper_pnl_worse_than_naive_best_ask()  ← must be true
+```
+
+### Step 4.6: Settlement (v2 Fix)
+
+Build `src/analytics/metrics.py`:
+
+```
+tests/unit/test_settlement.py
+├── test_buy_yes_win_is_profit()     ← (1.00-0.45) × qty > 0  ✓
+├── test_buy_yes_lose_is_loss()      ← (0.00-0.45) × qty < 0  ✓
+├── test_buy_no_win_is_profit()      ← (0.40-0.00) × qty > 0  ✓  v2 fix
+├── test_buy_no_lose_is_loss()       ← (0.40-1.00) × qty < 0  ✓  v2 fix
+├── test_fee_only_on_positive()
+└── test_buy_no_settlement_not_inverted()  ← explicitly verify no sign flip
 ```
 
 ---
 
-## Sprint 3: Phase 2 + 3 코어 (2~3주)
+## Phase 5: Automation + Dashboard (Weeks 9–12)
 
-> **목표:** Pre-Match 초기화 + 실시간 μ/P_true 계산이 동작한다.
+### Step 5.1: Match Engine
 
-### [S3-T1] Step 2.1~2.2: 데이터 수집 + 피처 선택 (2일)
+Build `src/engine/match_engine.py` — the main orchestrator:
 
-```
-의존: [S2-T3] (피처 엔지니어링), [S2-T7] (feature_mask)
-파일:
-  ├── src/prematch/__init__.py
-  ├── src/prematch/step_2_1_data_collection.py
-  └── src/prematch/step_2_2_feature_selection.py
-
-구현:
-  • collect_prematch_data(match_id, config) → PreMatchData
-    - 라인업 (Live Game Stats teams.{team})
-    - 선수 롤링 (과거 player_stats)
-    - 팀 롤링 (과거 stats.{team})
-    - 배당 (Pregame Odds)
-    - 컨텍스트 (휴식일, H2H)
-  • apply_feature_mask(prematch, feature_mask, median_values) → np.ndarray
-
-검증:
-  • 특정 경기의 PreMatchData 내용 수동 확인
-  • feature_mask 적용 후 벡터 차원이 Phase 1과 동일
-  • 결측 시 median 대체 작동
+```python
+class MatchEngine:
+    async def run_prematch(self) -> SanityResult: ...
+    async def run_live(self): ...
 ```
 
-### [S3-T2] Step 2.3: a 파라미터 역산 (0.5일)
-
 ```
-의존: [S3-T1], [S2-T7] (XGBoost 모델)
-파일:
-  └── src/prematch/step_2_3_a_parameter.py
-
-구현:
-  • predict_expected_goals(X_match, model_path) → (μ_H, μ_A)
-  • compute_C_time(b, E_alpha1, E_alpha2) → float
-  • compute_a_parameters(μ_H, μ_A, C_time) → (a_H, a_A)
-    - a = ln(μ) - ln(C_time)
-
-검증:
-  • a_H, a_A가 합리적 범위 (-2 < a < 1)
-  • exp(a_H) × C_time ≈ μ_H (역산 검증)
-  • pytest tests/unit/test_a_parameter.py
+tests/integration/test_match_engine.py
+├── test_full_lifecycle_replay()
+├── test_paper_trades_in_db()
+├── test_crash_cancels_orders()
+└── test_sanity_skip_stops_engine()
 ```
 
-### [S3-T3] Step 2.4: Sanity Check (1일)
+### Step 5.2: Scheduler
+
+Build `src/scheduler/main.py`:
+
+- Scan matches daily at 06:00 UTC
+- Spawn engine 60 min before kickoff
+- Monitor engine health every 10 seconds
+- Clean up finished engines
 
 ```
-의존: [S3-T2]
-파일:
-  └── src/prematch/step_2_4_sanity_check.py
-
-구현:
-  • primary_sanity_check(μ_H, μ_A, pinnacle, market_avg) → str
-  • secondary_sanity_check(μ_H, μ_A, ou_odds) → dict
-  • combined_sanity_check(...) → SanityResult
-
-검증:
-  • 다양한 괴리도에서 GO/GO_WITH_CAUTION/HOLD/SKIP 판정
-  • O/U 교차 검증이 "합은 맞지만 비율이 잘못된" 경우 감지
-  • pytest tests/unit/test_sanity.py
+tests/integration/test_scheduler.py
+├── test_scan_finds_matches()
+├── test_engine_spawned_on_time()
+├── test_finished_engine_removed()
+└── test_concurrent_engines()
 ```
 
-### [S3-T4] Step 2.5: 모델 인스턴스화 (1일)
+### Step 5.3: Alert Service
+
+Build `src/alerts/main.py`:
+
+Test with real Slack webhook.
+
+### Step 5.4: Dashboard (Minimal)
+
+Build the Phase 0 essentials:
 
 ```
-의존: [S3-T2], [S2-T2] (Q 행렬)
-파일:
-  └── src/prematch/step_2_5_initialization.py
-
-구현:
-  • initialize_model(match_id, a_H, a_A, C_time, config) → LiveFootballQuantModel
-    - P_grid[0..100] 사전 계산 (scipy.linalg.expm)
-    - P_fine_grid[0..30] 10초 단위 (경기 종료 직전용)
-    - Q_off_normalized 정규화
-    - 초기 상태 설정 (t=0, X=0, S=(0,0), ΔS=0)
-
-검증:
-  • P_grid[0] == identity matrix
-  • P_grid[90]의 행 합 ≈ 1.0
-  • Q_off_normalized 각 행 합 ≈ 1.0
+Must-have:
+├── 1B: PriceChart.jsx      ← P_true vs P_kalshi vs P_bet365 (THE key chart)
+├── 1A: MatchHeader.jsx      ← Score, minute, event_state
+├── 1D: SignalPanel.jsx      ← Signals + paper positions
+├── 1E: EventLog.jsx         ← Real-time events
+├── 2B: PositionTable.jsx    ← Paper positions
+└── 2C: PnLTimeline.jsx      ← Paper P&L
 ```
 
-### [S3-T5] Numba MC 코어 (2일) ⭐ 성능 핵심
+Backend: FastAPI + WebSocket → Redis subscriber.
+Frontend: React + Recharts.
 
-```
-의존: [S1-T5] (types)
-파일:
-  └── src/engine/mc_core.py
+### Step 5.5: systemd Services
 
-구현:
-  • @njit mc_simulate_remaining(...) → np.ndarray (N, 2)
-    - 팀별 γ (gamma_H, gamma_A)
-    - 정규화 Q_off
-    - 기저함수 경계 처리
-    - δ(ΔS) 인덱스 변환
-  • Numba 워밍업 함수
-
-검증:
-  • 알려진 단순 케이스 수동 검증 (X=0, ΔS=0, 1구간)
-    → Poisson 해석적 결과와 MC 결과 비교 (N=100000, 상대오차 < 1%)
-  • 성능: N=50000에서 < 1ms (Numba 컴파일 후)
-  • 결정론적 시드: 동일 입력 → 동일 출력
-  • pytest tests/unit/test_mc_core.py
-    - test_mc_vs_analytical_poisson
-    - test_mc_deterministic_seed
-    - test_mc_performance_benchmark
-    - test_mc_red_card_transition
-    - test_mc_delta_score_effect
+```bash
+sudo systemctl enable kalshi-scheduler kalshi-dashboard kalshi-alerts kalshi-collector
 ```
 
-### [S3-T6] Step 3.2: 잔여 기대 득점 (1.5일)
+**Verification:** Kill scheduler → restarts in 5 seconds.
 
-```
-의존: [S3-T4] (P_grid), [S3-T5] (MC 코어)
-파일:
-  ├── src/engine/__init__.py
-  └── src/engine/step_3_2_remaining_mu.py
+---
 
-구현:
-  • compute_remaining_mu(model) → (μ_H, μ_A)
-    - Piecewise 구간 분해
-    - P_grid 조회 (일반) / P_fine_grid (종료 5분 전)
-    - 마르코프 변조 적분
-  • analytical_remaining_mu(model, delta_S) → (μ_H, μ_A) (해석적)
+## Phase 6: Paper Trading (Weeks 12–16)
 
-검증:
-  • t=0, X=0, ΔS=0에서 μ_H + μ_A ≈ μ_total (Phase 2 예측과 일치)
-  • t→T에서 μ→0 수렴
-  • 레드카드 상태에서 μ_H, μ_A가 반대 방향으로 변동
-  • pytest tests/unit/test_remaining_mu.py
-```
+### Weeks 12–13: Burn-In
 
-### [S3-T7] Step 3.4: 하이브리드 프라이싱 (1.5일)
+- Deploy with `trading_mode: "paper"`
+- Monitor every match through dashboard
+- Watch for event timing, P_true trajectory, signal quality
 
-```
-의존: [S3-T5], [S3-T6]
-파일:
-  └── src/engine/step_3_4_pricing.py
+### Weeks 13–14: Bug Fixing
 
-구현:
-  • analytical_pricing(μ_H, μ_A, S) → dict  (Poisson/Skellam)
-    - Over/Under: G 정의 + edge case (G > N → P=1)
-    - Match Odds: 스켈람 분포
-  • aggregate_markets(final_scores, S) → dict (MC 결과 집계)
-  • compute_mc_stderr(P_true, N) → float
-  • step_3_4_async(model, μ_H, μ_A) → (P_true, σ_MC)
-    - 해석적/MC 분기 (DELTA_SIGNIFICANT)
-    - Executor 디커플링
-    - Stale 체크 + PRELIMINARY 체크
+Common bugs to expect:
+- Timezone format mismatches
+- Double-goal edge cases (two goals within seconds)
+- WebSocket reconnection failures
+- Memory leaks in long-running processes
 
-검증:
-  • X=0, ΔS=0에서 해석적 vs MC 결과 차이 < 1%
-  • σ_MC가 N 증가에 따라 감소 (√N 비례)
-  • pytest tests/unit/test_pricing.py
-```
+### Weeks 14–16: Data Accumulation
 
-### [S3-T8] 리플레이 엔진 — 과거 경기 재생 (2일)
+Run unattended. Accumulate 50+ matches of paper data.
 
-```
-의존: [S3-T6], [S3-T7]
-파일:
-  ├── tests/replay/replay_engine.py
-  └── tests/replay/test_replay.py
+### Paper Go/No-Go
 
-구현:
-  • ReplayEngine: 과거 경기의 이벤트를 시간순으로 재생하면서
-    Step 3.2 + 3.4를 실행하고, 매 분마다 P_true를 기록
-  • 결과를 CSV/JSON으로 저장
+| Metric | Required |
+|--------|----------|
+| Paper trades | ≥ 50 |
+| Paper P&L (after sim slippage) | > 0 |
+| Preliminary accuracy | > 0.90 |
+| Edge realization | 0.5 – 1.5 |
+| System uptime | > 95% |
+| No critical bugs for 1 week | Yes |
 
-검증:
-  • EPL 2023-24 시즌 10경기에서 리플레이 실행
-  • P_true가 합리적 범위 (0.01~0.99)
-  • 골 발생 시 P_true 점프 확인
-  • 시간 경과에 따른 P_true 수렴 (경기 종료 직전 → 0 or 1에 가까움)
+All pass → Phase A. Any fail → fix and extend.
 
-중요: 이 리플레이 엔진이 이후 Sprint에서 End-to-End 검증의 핵심 도구가 됨
+---
+
+## Phase 7: Live Trading (Week 16+)
+
+### Phase A: Conservative
+
+```yaml
+trading_mode: "live"
+K_frac: 0.25
+z: 1.645
+rapid_entry_enabled: false
 ```
 
-### Sprint 3 완료 기준
+Start with $500–1,000. Monitor every match for 2 weeks. Drawdown alert at 10%.
+
+### Phase B: Adaptive (after 100+ trades)
+
+Enable adaptive parameter adjustments. Allow DIVERGENT entries at 0.5x.
+
+### Phase C: Mature (after 300+ trades)
+
+K_frac up to 0.50. Conditionally enable Rapid Entry.
+
+---
+
+## Testing Strategy Summary
+
+### Test Pyramid
 
 ```
-□ Phase 2 (Step 2.1~2.5) 전체 파이프라인 실행 성공
-□ Numba MC 코어: N=50000에서 < 1ms
-□ 해석적 vs MC P_true 차이 < 1% (X=0, ΔS=0)
-□ 리플레이 엔진으로 과거 10경기 P_true 산출 성공
-□ 모든 단위 테스트 통과
+                    ╱╲
+                   ╱  ╲
+                  ╱ E2E ╲           5 replay tests
+                 ╱────────╲
+                ╱Integration╲       20 tests
+               ╱──────────────╲
+              ╱   Unit Tests    ╲   80+ tests
+             ╱────────────────────╲
+```
+
+### Most Critical Tests (Run After Every Change)
+
+```
+1. tests/unit/test_exit_logic.py         ← v2 Buy No fixes
+2. tests/unit/test_settlement.py         ← v2 P&L direction
+3. tests/unit/test_edge_detection.py     ← v2 VWAP + P_cons
+4. tests/unit/test_mc_core.py            ← Performance + correctness
+5. tests/unit/test_intervals.py          ← Data foundation
+6. tests/unit/test_nll.py                ← Mathematical core
+```
+
+```bash
+# Quick check (< 30s)
+pytest tests/unit/ -v
+
+# Full suite
+pytest tests/ -v --tb=short
 ```
 
 ---
 
-## Sprint 4: Phase 3 이벤트 처리 + Phase 4 실행 (2~3주)
+## Timeline Summary
 
-> **목표:** 실시간 이벤트 처리 + 트레이딩 시그널 + 주문 실행(PAPER)이 동작한다.
+| Week | Phase | Deliverable |
+|------|-------|-------------|
+| 1–2 | Foundation | Infra + Goalserve client + 3,000+ historical matches in DB |
+| 3–5 | Phase 1 | Trained MMPP parameters (b, γ, δ, Q) passing all validation |
+| 5–6 | Phase 2 | Pre-match pipeline: match_id → model instance |
+| 6–8 | Phase 3 | Live engine: events → P_true every second |
+| 8–9 | Phase 4 | Execution: signals → paper trades (v2 fixes verified) |
+| 9–12 | Automation | Scheduler + Dashboard + Alerts + systemd |
+| 12–16 | Paper | Full system on real matches, no real money |
+| 16+ | Live | Phase A ($500) → B (adaptive) → C (mature) |
 
-### [S4-T1] 엔진 상태 머신 (1일)
-
-```
-의존: [S1-T5]
-파일:
-  └── src/engine/state_machine.py
-
-구현:
-  • EnginePhase: FIRST_HALF → HALFTIME → SECOND_HALF → FINISHED
-  • EventState: IDLE → PRELIMINARY_DETECTED → CONFIRMED → COOLDOWN → IDLE
-  • 상태 전이 규칙 + 무효 전이 차단
-
-검증:
-  • 유효 전이: IDLE → PRELIMINARY → CONFIRMED (IDLE)
-  • 무효 전이: PRELIMINARY → PRELIMINARY (무시)
-  • 타임아웃: PRELIMINARY → IDLE (10초)
-```
-
-### [S4-T2] Goalserve Live Odds WebSocket 소스 (2일)
-
-```
-의존: [S1-T6], [S4-T1]
-파일:
-  └── src/goalserve/live_odds_source.py
-
-구현:
-  • GoalserveLiveOddsSource(EventSource)
-    - WebSocket 연결 + 재연결 로직
-    - score 변동 감지 → goal_detected / score_rollback
-    - 배당 급변 감지 → odds_spike
-    - period 변경 감지 → period_change
-    - minute > 45/90 → stoppage_entered
-
-검증:
-  • Mock WebSocket으로 단위 테스트
-  • 실제 Goalserve Trial로 통합 테스트 (라이브 경기 있을 때)
-```
-
-### [S4-T3] Goalserve Live Score REST 소스 (1.5일)
-
-```
-의존: [S1-T6], [S4-T1]
-파일:
-  └── src/goalserve/live_score_source.py
-
-구현:
-  • GoalserveLiveScoreSource(EventSource)
-    - 3초 폴링 + 이전 상태와 diff
-    - 골 확정 (team, scorer_id, var_cancelled)
-    - 레드카드 확정
-    - period 변경
-
-검증:
-  • Mock 데이터로 diff 로직 단위 테스트
-  • 연속 폴링에서 중복 이벤트 방지
-```
-
-### [S4-T4] Step 3.3: 이벤트 핸들러 — Preliminary + Confirmed (2일)
-
-```
-의존: [S4-T1], [S4-T2], [S4-T3], [S3-T6]
-파일:
-  └── src/engine/step_3_3_event_handler.py
-
-구현:
-  • handle_preliminary_goal(model, event)
-    - ob_freeze + PRELIMINARY 상태 + μ 사전 계산
-  • handle_score_rollback(model, event)
-    - VAR 취소 → 상태 롤백
-  • handle_confirmed_goal(model, event)
-    - VAR 확인 → S, ΔS, δ 업데이트 + cooldown
-    - 사전 계산 재사용 (preliminary_cache)
-  • handle_confirmed_red_card(model, event)
-    - X 전이 + γ^H, γ^A 변경 + μ 재계산
-  • handle_odds_spike(model, event)
-  • handle_period_change(model, event)
-  • precompute_preliminary_mu(model, delta_S, scoring_team) (async)
-
-검증:
-  • 골 시나리오: IDLE → PRELIMINARY → CONFIRMED → COOLDOWN → IDLE
-  • VAR 취소: IDLE → PRELIMINARY → score_rollback → IDLE
-  • 레드카드: odds_spike(ob_freeze) → red_card(confirmed) → IDLE
-  • pytest tests/unit/test_event_handler.py
-```
-
-### [S4-T5] ob_freeze 3-Layer 로직 (1일)
-
-```
-의존: [S4-T1]
-파일:
-  └── src/engine/ob_freeze.py
-
-구현:
-  • check_ob_freeze_release(model) → 해제 조건 3가지
-  • 쿨다운 타이머 (15초)
-
-검증:
-  • 해제 조건 1: cooldown이 이어받으면 ob_freeze 해제
-  • 해제 조건 2: 3틱 안정화
-  • 해제 조건 3: 10초 타임아웃
-```
-
-### [S4-T6] Step 3.5: 추가시간 관리자 (0.5일)
-
-```
-의존: [S4-T2], [S4-T3]
-파일:
-  └── src/engine/step_3_5_stoppage.py
-
-구현:
-  • StoppageTimeManager
-    - update_from_live_odds(minute, period) → T
-    - update_from_live_score(minute, period) → T
-    - Phase B: T_game 유지 (전반 추가시간)
-    - Phase C: T 롤링 (후반 추가시간)
-    - 이중 소스 교차 검증 (2분 이상 차이 시 경고)
-
-검증:
-  • minute=92, period="2nd Half" → T = 93.5
-  • minute=46, period="1st Half" → T = T_exp (변경 없음)
-```
-
-### [S4-T7] Kalshi 클라이언트 + OrderBookSync (2일)
-
-```
-의존: [S1-T5]
-파일:
-  ├── src/kalshi/__init__.py
-  ├── src/kalshi/client.py              # REST + WebSocket
-  └── src/kalshi/orderbook.py           # OrderBookSync
-
-구현:
-  • KalshiClient
-    - WebSocket 연결 (호가 수신)
-    - REST: submit_order, cancel_order, get_positions, get_balance
-  • OrderBookSync
-    - update_kalshi(orderbook)
-    - compute_vwap_buy(target_qty) → float
-    - compute_vwap_sell(target_qty) → float
-    - update_bet365(live_odds_markets)
-
-검증:
-  • Kalshi Demo/Paper API로 연동 테스트
-  • VWAP 계산: 수동 검증 (3호가 레벨 예시)
-  • pytest tests/integration/test_kalshi_client.py
-```
-
-### [S4-T8] Step 4.2: Edge Detection — 2-pass VWAP + 시장 정합성 (2일)
-
-```
-의존: [S4-T7], [S3-T7]
-파일:
-  └── src/trading/step_4_2_edge_detection.py
-
-구현:
-  • compute_conservative_P(P_true, σ_MC, direction, z) → float
-  • compute_signal_with_vwap(...) → Signal (2-pass)
-  • check_market_alignment(P_cons, P_kalshi, P_bet365, direction) → MarketAlignment
-  • generate_signal(...) → Signal
-
-검증:
-  • Buy Yes: P_cons = P_true - z*σ
-  • Buy No: P_cons = P_true + z*σ (방향별 보정)
-  • VWAP > best ask일 때 final_EV < rough_EV
-  • VWAP 반영 후 엣지 소멸 시 HOLD 반환
-  • ALIGNED → mult 0.8, DIVERGENT → mult 0.5
-  • pytest tests/unit/test_edge_detection.py
-    - test_buy_yes_conservative_P
-    - test_buy_no_conservative_P
-    - test_vwap_reduces_EV
-    - test_vwap_kills_thin_edge
-    - test_alignment_status
-```
-
-### [S4-T9] Step 4.3: Kelly + 리스크 한도 (1일)
-
-```
-의존: [S4-T8]
-파일:
-  ├── src/trading/step_4_3_position_sizing.py
-  └── src/trading/risk_manager.py
-
-구현:
-  • compute_kelly(signal, c, K_frac) → float
-    - 방향별 W/L
-    - alignment_status multiplier
-  • apply_risk_limits(f_invest, match_id, bankroll) → float
-    - 3-Layer (3%/5%/20%)
-    - pro-rata 축소
-
-검증:
-  • Buy Yes Kelly vs Buy No Kelly (같은 EV에서 다른 f)
-  • Layer 1 초과 시 클램핑
-  • Layer 2 초과 시 해당 경기 차단
-  • Layer 3 초과 시 전체 차단
-  • pytest tests/unit/test_kelly.py, test_risk_limits.py
-```
-
-### [S4-T10] Step 4.4: 청산 로직 — 방향별 수식 (2일)
-
-```
-의존: [S4-T8]
-파일:
-  └── src/trading/step_4_4_exit_logic.py
-
-구현:
-  • check_edge_decay(position, P_true, σ_MC, P_kalshi_bid, c, z)
-  • check_edge_reversal(position, P_true, σ_MC, P_kalshi_bid, z)
-    - Buy No: P_cons > P_kalshi_bid + θ (v2 수정)
-  • check_expiry_eval(position, P_true, σ_MC, P_kalshi_bid, c, z, t, T)
-    - 방향별 E_hold (v2 수정)
-    - 방향별 E_exit
-  • check_bet365_divergence(position, P_bet365)
-    - Buy No: P_bet365 > entry + 0.05 (v2 수정)
-  • evaluate_exit(...) → Optional[ExitSignal]
-
-검증:
-  • Buy No Edge Reversal: bid=0.40 → 임계값 0.42 (NOT 0.62)
-  • Buy No Expiry: entry=0.40, P_cons=0.35 → E_hold 양수 (보유 유리)
-  • Buy No Divergence: entry=0.40 → 임계값 0.45 (NOT 0.65)
-  • pytest tests/unit/test_exit_logic.py
-    - test_buy_no_edge_reversal_threshold
-    - test_buy_no_expiry_hold_vs_exit
-    - test_buy_no_divergence_threshold
-    - test_buy_yes_all_triggers (기존 검증)
-```
-
-### [S4-T11] Step 4.5: 주문 실행 — PAPER + LIVE (1.5일)
-
-```
-의존: [S4-T7], [S4-T9]
-파일:
-  └── src/kalshi/execution.py
-
-구현:
-  • ExecutionLayer (모드 분기)
-  • PaperExecutionLayer
-    - VWAP 기반 체결가 (v2)
-    - 1 tick 슬리피지 가산
-    - 부분 체결 시뮬레이션
-  • LiveExecutionLayer
-    - Kalshi REST 주문 제출
-    - 5초 체결 대기 + 미체결 취소
-  • post_event_rapid_entry (조건부, 초기 비활성)
-    - VAR 안전 대기 5초 (v2)
-    - P_cons 보정 (v2)
-
-검증:
-  • Paper: VWAP > best ask 확인 (슬리피지 반영)
-  • Paper: 호가 부족 시 부분 체결
-  • Live: Mock Kalshi API로 주문 플로우 테스트
-```
-
-### [S4-T12] Step 4.6: 정산 P&L — 방향별 (0.5일)
-
-```
-의존: [S1-T5]
-파일:
-  └── src/analytics/metrics.py (정산 부분만 먼저)
-
-구현:
-  • compute_realized_pnl(position, settlement, fee_rate) → float
-    - Buy Yes: (settlement - entry) × qty - fee
-    - Buy No: (entry - settlement) × qty - fee  (v2 수정)
-
-검증:
-  • Buy No, entry=0.40, settlement=0.00 → PnL 양수 (No 승리)
-  • Buy No, entry=0.40, settlement=1.00 → PnL 음수 (No 패배)
-  • pytest tests/unit/test_settlement.py
-```
-
-### [S4-T13] MatchEngine 통합 — Phase 2~4 결합 (2일)
-
-```
-의존: [S4-T1]~[S4-T12] 전부
-파일:
-  └── src/engine/match_engine.py
-
-구현:
-  • MatchEngine 클래스
-    - run_prematch() → SanityResult
-    - run_live() → 3개 코루틴 gather
-    - _tick_loop(): Step 3.2 → 3.4 → 4.2~4.5
-    - _live_odds_listener(): 이벤트 핸들링
-    - _live_score_poller(): 이벤트 핸들링
-    - _publish_state_snapshot(): Redis 발행
-    - _emergency_shutdown(): 안전 종료
-
-검증:
-  • 리플레이 엔진으로 과거 경기 End-to-End 실행
-  • Phase 2 → 3 → 4 전체 파이프라인 동작
-  • 골 이벤트 → PRELIMINARY → CONFIRMED → 시그널 → 가상 주문
-  • tests/integration/test_match_engine.py
-```
-
-### Sprint 4 완료 기준
-
-```
-□ MatchEngine이 리플레이 모드로 과거 경기 전체 파이프라인 실행 성공
-□ 3-Layer 감지: Live Odds WS + Kalshi WS + Live Score REST 동시 동작
-□ PRELIMINARY → CONFIRMED 2단계 처리 정상 작동
-□ Phase 4 v2 모든 수정 반영 (방향별 수식, VWAP, Paper 슬리피지)
-□ 가상 주문(PAPER) 생성 + 정산 P&L 계산 정상
-□ 모든 단위 테스트 + 통합 테스트 통과
-```
+**First paper trade: ~Week 9.**
+**First live trade: ~Week 16.**
 
 ---
 
-## Sprint 5: 스케줄러 + 24/7 자동화 (1~2주)
-
-> **목표:** 킨 순간부터 자동으로 돌아간다.
-
-### [S5-T1] MatchScheduler 코어 (2일)
-
-```
-의존: [S4-T13]
-파일:
-  └── src/scheduler/main.py
-
-구현:
-  • scan_today_matches() → DB에 match_jobs 생성
-  • spawn_engine(match_id) → MatchEngine 생성 + Phase 2 실행
-  • monitor_engines() → 건강 체크 (10초 간격)
-  • handle_match_finished() → 정리 + 로그 기록
-  • 매일 06:00 스케줄 스캔 + 매 5분 갱신
-```
-
-### [S5-T2] systemd 서비스 등록 (0.5일)
-
-```
-의존: [S5-T1]
-파일:
-  ├── scripts/setup_systemd.sh
-  ├── /etc/systemd/system/kalshi-scheduler.service
-  ├── /etc/systemd/system/kalshi-dashboard.service
-  ├── /etc/systemd/system/kalshi-alerts.service
-  └── /etc/systemd/system/kalshi-collector.service
-
-검증:
-  • systemctl start kalshi-scheduler → 프로세스 기동
-  • kill 후 5초 내 자동 재시작
-  • 서버 리부트 후 전 서비스 자동 시작
-```
-
-### [S5-T3] 알림 서비스 (1.5일)
-
-```
-의존: [S1-T3] (Redis)
-파일:
-  ├── src/alerts/__init__.py
-  ├── src/alerts/main.py
-  ├── src/alerts/slack.py
-  └── src/alerts/telegram.py
-
-구현:
-  • AlertService: Redis 구독 → 자동 알림
-  • Slack Webhook + Telegram Bot 연동
-  • 상태 기반 자동 알림 (Drawdown, PRELIMINARY 30초+, 소스 장애)
-
-검증:
-  • Redis에 alert 발행 → Slack에 메시지 수신
-  • CRITICAL 이벤트 → Telegram에도 수신
-```
-
-### Sprint 5 완료 기준
-
-```
-□ 스케줄러가 오늘 경기 자동 스캔 + 엔진 자동 스폰
-□ systemd로 프로세스 자동 시작 + 크래시 복구
-□ Slack 알림 수신 확인
-□ kill -9 scheduler → 5초 후 자동 재시작 확인
-```
-
----
-
-## Sprint 6: 대시보드 (2~3주)
-
-> **목표:** 실시간 모니터링 UI가 브라우저에서 동작한다.
-
-### [S6-T1] FastAPI WebSocket 서버 (1.5일)
-
-```
-의존: [S1-T3]
-파일:
-  ├── src/dashboard/__init__.py
-  ├── src/dashboard/server.py
-  └── src/dashboard/api/live.py
-
-구현:
-  • /ws/live/{match_id} — 경기별 실시간 스트림
-  • /ws/portfolio — 전체 포트폴리오 스트림
-  • Redis Pub/Sub → WebSocket bridge
-```
-
-### [S6-T2] React 프론트엔드 스캐폴딩 (1일)
-
-```
-의존: 없음 (프론트엔드 독립)
-파일:
-  ├── src/dashboard/frontend/package.json
-  ├── src/dashboard/frontend/src/App.jsx
-  ├── src/dashboard/frontend/src/index.jsx
-  ├── src/dashboard/frontend/src/hooks/useMatchStream.js
-  └── src/dashboard/frontend/src/utils/formatters.js
-
-구현:
-  • Create React App + Tailwind CSS + Recharts
-  • useMatchStream hook (WebSocket 연결 + 자동 재연결)
-```
-
-### [S6-T3] Layer 1: PriceChart ⭐ (2일)
-
-```
-의존: [S6-T1], [S6-T2]
-파일:
-  └── src/dashboard/frontend/src/components/Layer1_LiveMatch/PriceChart.jsx
-
-구현:
-  • P_true (파랑) vs P_kalshi (빨강) vs P_bet365 (초록) 실시간 차트
-  • 엣지 영역 음영
-  • 이벤트 마커 (골, 레드카드, 하프타임)
-  • PRELIMINARY 점선 → CONFIRMED 실선 전환
-  • 시장 탭 (Over 2.5, Home Win 등)
-
-검증:
-  • 브라우저에서 실시간 데이터 수신 확인
-  • 3개 라인이 정상적으로 갱신
-  • 이벤트 마커가 올바른 시점에 표시
-```
-
-### [S6-T4] Layer 1: 나머지 패널 (2일)
-
-```
-의존: [S6-T3]
-파일:
-  ├── MatchHeader.jsx        # 1A: 상태 헤더 + 색상 코딩
-  ├── MuChart.jsx            # 1C: μ 감쇠 차트
-  ├── SignalPanel.jsx        # 1D: 시그널 + 포지션
-  ├── EventLog.jsx           # 1E: 이벤트 로그 (색상 코딩)
-  └── SourceStatus.jsx       # 1F: 데이터 소스 상태
-```
-
-### [S6-T5] Layer 2: 포트폴리오 뷰 (2일)
-
-```
-의존: [S6-T1]
-파일:
-  ├── src/dashboard/api/portfolio.py
-  ├── RiskDashboard.jsx      # 2A: 3-Layer 리스크 게이지
-  ├── PositionTable.jsx      # 2B: 포지션 테이블
-  └── PnLTimeline.jsx        # 2C: P&L 타임라인
-```
-
-### [S6-T6] Layer 3: Analytics 뷰 — Phase 0 필수 (2일)
-
-```
-의존: [S6-T1], [S4-T12]
-파일:
-  ├── src/dashboard/api/analytics.py
-  ├── HealthDashboard.jsx    # 3A: 7개 게이지
-  └── CumulativePnL.jsx      # 3C: 누적 P&L + Drawdown
-```
-
-### Sprint 6 완료 기준
-
-```
-□ 브라우저에서 실시간 P_true/P_kalshi/P_bet365 차트 확인
-□ 경기 상태 색상 코딩 작동 (PRELIMINARY → 노랑 등)
-□ 포트폴리오 리스크 게이지 작동
-□ PAPER/LIVE 모드 배지 표시
-```
-
----
-
-## Sprint 7: 사후 분석 + 적응적 파라미터 (1~2주)
-
-> **목표:** Step 4.6 자동화 + 피드백 루프가 동작한다.
-
-### [S7-T1] 11개 분석 지표 계산 (2일)
-
-```
-의존: [S4-T12]
-파일:
-  └── src/analytics/metrics.py (나머지 지표)
-
-구현:
-  • 지표 1~6: P&L, Brier, Edge실현율, 슬리피지, 쿨다운, ob_freeze
-  • 지표 7: 시장 정합성 효과 (ALIGNED vs DIVERGENT)
-  • 지표 8: 방향별 Edge 실현율 (Yes vs No)
-  • 지표 9: Preliminary 정확도
-  • 지표 10: Rapid Entry 가상 P&L
-  • 지표 11: bet365 이탈 경고 효과
-```
-
-### [S7-T2] 적응적 파라미터 조정 (1일)
-
-```
-의존: [S7-T1]
-파일:
-  └── src/analytics/adaptive_params.py
-
-구현:
-  • adaptive_parameter_update(analytics) → 7개 파라미터 조정
-  • 파라미터 변경 이력 DB 저장
-```
-
-### [S7-T3] DailyAnalytics CRON (1일)
-
-```
-의존: [S7-T1], [S7-T2]
-파일:
-  └── src/analytics/daily.py
-
-구현:
-  • 매일 자정: 정산 경기 분석 + 파라미터 조정 + 리포트 생성
-```
-
-### [S7-T4] Layer 3 Analytics 확장 (2일)
-
-```
-의존: [S7-T1], [S6-T6]
-파일:
-  ├── CalibrationPlot.jsx    # 3B
-  ├── DirectionalAnalysis.jsx # 3D
-  ├── Bet365Effect.jsx       # 3E
-  ├── PrelimAccuracy.jsx     # 3F
-  └── ParamHistory.jsx       # 3G
-```
-
-### Sprint 7 완료 기준
-
-```
-□ 11개 분석 지표 자동 계산
-□ 일일 리포트 Slack 발송
-□ 적응적 파라미터 조정 로직 작동
-□ Layer 3 Analytics 전체 뷰 브라우저 표시
-```
-
----
-
-## Sprint 8: Phase 0 PAPER 트레이딩 (2~4주 운영)
-
-> **목표:** 실제 경기에서 24/7 무인 PAPER 운영. Go/No-Go 데이터 축적.
-
-### [S8-T1] PAPER 운영 시작 + 안정화 (1주)
-
-```
-수행:
-  • trading_mode: "paper"로 24/7 운영 시작
-  • 첫 주: 버그 발견 + 즉시 수정 사이클
-  • 스케줄러 → 엔진 스폰 → Phase 2~4 → 정산 자동 확인
-  • Slack 알림 정상 수신 확인
-
-관찰:
-  • 경기당 평균 시그널 수
-  • PRELIMINARY → CONFIRMED 지연 시간
-  • ob_freeze 발동 빈도
-  • 엔진 크래시 빈도 (0이어야 함)
-```
-
-### [S8-T2] 데이터 축적 (2~3주)
-
-```
-수행:
-  • 최소 50경기 PAPER 거래 축적 (100+ 거래)
-  • 매일 DailyAnalytics 확인
-
-축적 지표:
-  • Brier Score 추이
-  • Edge 실현율 (목표: 0.7~1.3)
-  • 가상 P&L 추이 (양의 기울기)
-  • Max Drawdown (목표: < 15%)
-  • Preliminary 정확도 (목표: > 0.95)
-  • 방향별 Edge 실현율 (Yes vs No 균형)
-```
-
-### [S8-T3] Phase A 전환 Go/No-Go 판정
-
-```
-Go 기준 (모두 충족):
-  □ 누적 거래 ≥ 100
-  □ Brier Score: Pinnacle 대비 개선
-  □ Edge 실현율: 0.7~1.3
-  □ 가상 P&L: 양수 (슬리피지 반영 후)
-  □ Max Drawdown: < 15%
-  □ Preliminary 정확도: > 0.90
-  □ 엔진 크래시: 0회 (최근 2주)
-  □ 데이터 소스 장애: 자동 복구 성공
-
-No-Go 시:
-  • 문제점 분석 → 코드 수정 → Sprint 8 연장
-  • 모델 문제면 Phase 1 재학습 → Sprint 2 부분 재실행
-```
-
----
-
-## Sprint 9: Phase A LIVE 전환 (1주 준비 + 운영)
-
-> **목표:** 실제 돈으로 보수적 트레이딩 시작.
-
-### [S9-T1] LIVE 전환 준비 (2일)
-
-```
-수행:
-  ├── config/system.live.yaml 최종 확인
-  │   • trading_mode: "live"
-  │   • K_frac: 0.25
-  │   • z: 1.645
-  │   • Kalshi API 키 설정
-  │   • 초기 bankroll 설정
-  │
-  ├── Kalshi 계좌 확인
-  │   • 잔고 확인
-  │   • API 권한 확인
-  │   • 주문 테스트 (1계약 매수/매도)
-  │
-  └── 모니터링 강화
-      • Drawdown 알림 임계값: 10%
-      • 일일 P&L 알림 활성화
-      • Telegram Critical 알림 활성화
-```
-
-### [S9-T2] LIVE 운영 시작
-
-```
-수행:
-  • trading_mode: "paper" → "live"
-  • 첫 1주: 집중 모니터링 (대시보드 상시 확인)
-  • 이상 발생 시 즉시 "paper"로 롤백
-
-관찰:
-  • 실제 체결가 vs Paper 예상 체결가 비교
-  • 실제 슬리피지 측정
-  • Kalshi API 응답 시간
-  • 실제 P&L vs Paper P&L 비교
-```
-
----
-
-## 전체 타임라인 요약
-
-```
-Week  1-2:  Sprint 1 — 인프라 (+ 과거 데이터 수집 백그라운드)
-Week  3-5:  Sprint 2 — Phase 1 (Offline Calibration)
-Week  6-8:  Sprint 3 — Phase 2+3 코어 (μ/P_true 계산)
-Week  9-11: Sprint 4 — 이벤트 처리 + Phase 4 실행
-Week 12-13: Sprint 5 — 스케줄러 + 24/7 자동화
-Week 13-15: Sprint 6 — 대시보드
-Week 15-16: Sprint 7 — 사후 분석
-Week 17-20: Sprint 8 — PAPER 운영 + 안정화
-Week 21+:   Sprint 9 — LIVE 전환
-
-총 예상: ~20주 (5개월)
-```
-
----
-
-## 태스크 의존성 전체 그래프
-
-```
-[S1-T1] Config
-   ├──▶ [S1-T2] Logging
-   ├──▶ [S1-T3] Redis ──▶ [S1-T4] PostgreSQL
-   ├──▶ [S1-T5] Types
-   └──▶ [S1-T6] Goalserve Client ──▶ [S1-T7] Data Collector
-                                          │
-   ┌──────────────────────────────────────┘
-   ▼
-[S2-T1] Intervals ──┬──▶ [S2-T2] Q Matrix ──────────┐
-                    │                                 │
-[S2-T3] Features ──▶ [S2-T4] XGBoost ───────────────┤
-                                                      ▼
-                                              [S2-T5] NLL ⭐
-                                                      │
-                                              [S2-T6] Validation
-                                                      │
-                                              [S2-T7] Recalibrate
-                                                      │
-   ┌──────────────────────────────────────────────────┘
-   ▼
-[S3-T1] Prematch Data ──▶ [S3-T2] a Parameter ──▶ [S3-T3] Sanity
-                                                        │
-[S3-T4] Model Init ◀───────────────────────────────────┘
-   │
-[S3-T5] MC Core ⭐ ──▶ [S3-T6] Remaining μ ──▶ [S3-T7] Pricing
-   │                                                │
-   └──────────────────────────────────────▶ [S3-T8] Replay Engine
-                                                │
-   ┌────────────────────────────────────────────┘
-   ▼
-[S4-T1] State Machine
-   │
-   ├──▶ [S4-T2] Live Odds WS ──┐
-   ├──▶ [S4-T3] Live Score REST ┤
-   │                             ▼
-   ├──▶ [S4-T4] Event Handler ──▶ [S4-T5] ob_freeze
-   │                             │
-   │    [S4-T6] Stoppage ◀──────┘
-   │
-   ├──▶ [S4-T7] Kalshi Client ──▶ [S4-T8] Edge Detection (v2) ⭐
-   │                                    │
-   │                              [S4-T9] Kelly + Risk
-   │                                    │
-   │                              [S4-T10] Exit Logic (v2) ⭐
-   │                                    │
-   │                              [S4-T11] Execution (Paper v2)
-   │                                    │
-   │                              [S4-T12] Settlement (v2)
-   │                                    │
-   └────────────────────────────▶ [S4-T13] MatchEngine 통합
-                                        │
-   ┌────────────────────────────────────┘
-   ▼
-[S5-T1] Scheduler ──▶ [S5-T2] systemd ──▶ [S5-T3] Alerts
-                                               │
-[S6-T1] Dashboard Server ──▶ [S6-T2] React ──▶ [S6-T3] PriceChart ⭐
-   │                                           │
-   └──▶ [S6-T4] Layer 1 ──▶ [S6-T5] Layer 2 ──▶ [S6-T6] Layer 3
-                                                       │
-[S7-T1] Metrics ──▶ [S7-T2] Adaptive ──▶ [S7-T3] Daily CRON
-                                               │
-                                         [S7-T4] Analytics UI
-                                               │
-                                         [S8] PAPER 운영
-                                               │
-                                         [S9] LIVE 전환
-```
+## Appendix: Common Pitfalls
+
+| Pitfall | Prevention |
+|---------|-----------|
+| Goalserve IP not whitelisted | Register static IP **before** starting trial |
+| Timezone mismatches | Store everything UTC, convert only for display |
+| Numba compilation fails on server | Pin numba+numpy versions, test on deploy target |
+| WebSocket silently dies | Heartbeat check + auto-reconnect with backoff |
+| Phase 1 overfits | Walk-forward CV — never skip Step 1.5 |
+| Buy No formulas wrong | v2 unit tests catch all 3 direction bugs — run them always |
+| VWAP not used in EV | 2-pass is inside generate_signal — verify `P_kalshi ≠ best_ask` |
+| Paper P&L too optimistic | v2 Paper uses VWAP + slippage — verify `slippage > 0` |
+| Parameter drift over time | Daily analytics detects Brier degradation → auto-recalibrate |
+| Two goals in same second | Event handler must be idempotent per score state |
+| Halftime pricing drift | engine_phase == HALFTIME freezes pricing and orders |
+| Rapid Entry VAR risk | 5-second safety wait + P_cons z-correction (v2) |
