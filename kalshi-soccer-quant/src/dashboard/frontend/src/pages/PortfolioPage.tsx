@@ -1,6 +1,8 @@
 import React from 'react';
 import { usePortfolio } from '../hooks/usePortfolio';
-import { formatPnl, formatPct } from '../utils/formatters';
+import RiskDashboard from '../components/Layer2_Portfolio/RiskDashboard';
+import PositionTable from '../components/Layer2_Portfolio/PositionTable';
+import PnLTimeline from '../components/Layer2_Portfolio/PnLTimeline';
 
 /** Layer 2: Portfolio View — aggregate exposure, P&L, risk limits. */
 const PortfolioPage: React.FC = () => {
@@ -20,40 +22,19 @@ const PortfolioPage: React.FC = () => {
         Portfolio Overview
       </h2>
 
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', marginBottom: '24px' }}>
-        <SummaryCard label="Bankroll" value={`$${summary.bankroll.toLocaleString()}`} />
-        <SummaryCard label="Active Matches" value={String(summary.active_matches)} />
-        <SummaryCard label="Open Positions" value={String(summary.open_positions)} />
-        <SummaryCard
-          label="Total Exposure"
-          value={`$${summary.total_exposure} (${formatPct(summary.total_exposure_pct)})`}
-        />
-        <SummaryCard
-          label="Realized P&L"
-          value={formatPnl(summary.realized_pnl)}
-          valueColor={summary.realized_pnl >= 0 ? '#22c55e' : '#ef4444'}
-        />
-        <SummaryCard
-          label="Unrealized P&L"
-          value={formatPnl(summary.unrealized_pnl)}
-          valueColor={summary.unrealized_pnl >= 0 ? '#22c55e' : '#ef4444'}
-        />
+      {/* D3.4: Risk Dashboard with summary metrics + progress bars */}
+      <div style={{ marginBottom: '24px' }}>
+        <RiskDashboard summary={summary} />
       </div>
 
-      {/* Risk Limits */}
-      <h3 style={{ fontSize: '15px', fontWeight: 600, marginBottom: '12px', color: '#94a3b8' }}>
-        Risk Limits
-      </h3>
-      <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', marginBottom: '24px' }}>
-        <SummaryCard label="L1 Order Cap" value={formatPct(summary.risk_limits.l1_order_cap * 100)} />
-        <SummaryCard label="L2 Match Cap" value={formatPct(summary.risk_limits.l2_match_cap * 100)} />
-        <SummaryCard label="L3 Total Cap" value={formatPct(summary.risk_limits.l3_total_cap * 100)} />
-        <SummaryCard
-          label="L3 Used"
-          value={formatPct(summary.risk_limits.l3_used_pct)}
-          valueColor={summary.risk_limits.l3_used_pct > 80 ? '#ef4444' : '#22c55e'}
-        />
+      {/* D3.5: Position Table */}
+      <div style={{ marginBottom: '24px' }}>
+        <PositionTable />
+      </div>
+
+      {/* D3.6: P&L Timeline */}
+      <div style={{ marginBottom: '24px' }}>
+        <PnLTimeline />
       </div>
 
       {/* Active Matches via WebSocket */}
@@ -91,26 +72,5 @@ const PortfolioPage: React.FC = () => {
     </div>
   );
 };
-
-const SummaryCard: React.FC<{
-  label: string;
-  value: string;
-  valueColor?: string;
-}> = ({ label, value, valueColor }) => (
-  <div
-    style={{
-      backgroundColor: '#1e293b',
-      borderRadius: '8px',
-      padding: '16px',
-    }}
-  >
-    <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-      {label}
-    </div>
-    <div style={{ fontSize: '18px', fontWeight: 700, color: valueColor || '#e2e8f0' }}>
-      {value}
-    </div>
-  </div>
-);
 
 export default PortfolioPage;

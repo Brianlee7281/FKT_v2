@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date, datetime
 from typing import Any
 
 import asyncpg
@@ -59,7 +60,21 @@ class DBClient:
     # ── Match-specific operations ──
 
     async def upsert_match_result(self, match: dict) -> None:
-        """Insert or update a historical match result."""
+        """Insert or update a historical match result.
+
+        Expects normalized match dict (no @-prefixed keys).
+        Goalserve fields: id, static_id, date, status,
+          localteam.{name, score, ft_score}, visitorteam.{...},
+          halftime.score ("H - A"), goals, etc.
+        """
+        # Parse halftime score from "H - A" format
+        ht_h, ht_a = 0, 0
+        ht_score_str = match.get("halftime", {}).get("score", "")
+        if isinstance(ht_score_str, str) and " - " in ht_score_str:
+            parts = ht_score_str.split(" - ")
+            ht_h = _safe_int(parts[0].strip())
+            ht_a = _safe_int(parts[1].strip())
+
         await self.execute(
             """
             INSERT INTO historical_matches
@@ -79,20 +94,22 @@ class DBClient:
                 lineups = EXCLUDED.lineups,
                 collected_at = NOW()
             """,
-            match.get("id", ""),
+            match.get("id", match.get("static_id", "")),
             match.get("league_id", ""),
-            match.get("date", ""),
+            _parse_date(match.get("date", "")),
             match.get("localteam", {}).get("name", ""),
             match.get("visitorteam", {}).get("name", ""),
-            _safe_int(match.get("localteam", {}).get("ft_score")),
-            _safe_int(match.get("visitorteam", {}).get("ft_score")),
-            _safe_int(match.get("localteam", {}).get("ht_score")),
-            _safe_int(match.get("visitorteam", {}).get("ht_score")),
-            _safe_int(match.get("matchinfo", {}).get("time", {}).get("addedTime_period1")),
-            _safe_int(match.get("matchinfo", {}).get("time", {}).get("addedTime_period2")),
+            _safe_int(match.get("localteam", {}).get("ft_score",
+                       match.get("localteam", {}).get("score"))),
+            _safe_int(match.get("visitorteam", {}).get("ft_score",
+                       match.get("visitorteam", {}).get("score"))),
+            ht_h,
+            ht_a,
+            0,  # added_time not available in fixtures endpoint
+            0,
             match.get("status", ""),
-            json.dumps(match.get("summary", {})),
-            json.dumps(match.get("teams", {})),
+            json.dumps(match.get("goals", {})),
+            json.dumps({}),
         )
 
     async def upsert_match_stats(self, match_id: str, stats: dict) -> None:
@@ -162,3 +179,15 @@ def _safe_int(val: Any) -> int:
         return int(val)
     except (ValueError, TypeError):
         return 0
+
+
+def _parse_date(val: str) -> date | None:
+    """Parse Goalserve date format (dd.mm.yyyy) to Python date."""
+    if not val:
+        return None
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(val, fmt).date()
+        except ValueError:
+            continue
+    return None

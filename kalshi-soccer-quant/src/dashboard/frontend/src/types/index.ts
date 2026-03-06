@@ -31,14 +31,52 @@ export interface MatchState {
   sigma_MC?: number;
   pricing_mode?: string;   // ANALYTICAL or MONTE_CARLO
 
-  // Signal
+  // Signal (single-market, legacy)
   EV?: number;
   direction?: string;
   bet365_confidence?: string;
 
+  // Per-market signals (populated when engine computes signals)
+  signals?: MarketSignal[];
+
+  // Open positions for this match
+  positions?: MatchPosition[];
+
+  // Data source status (populated by engine)
+  sources?: SourceStatusInfo[];
+
   // Engine meta
   trade_count?: number;
   bankroll?: number;
+}
+
+/** Data source connection status. */
+export interface SourceStatusInfo {
+  name: string;           // e.g. "Live Odds WS", "Kalshi WS", "Live Score"
+  type: string;           // "websocket" or "polling"
+  connected: boolean;
+  last_message_ts?: number;  // Unix timestamp of last received message
+  error?: string;
+}
+
+/** Per-market signal from the engine's current tick. */
+export interface MarketSignal {
+  market: string;
+  direction: string;     // BUY_YES, BUY_NO, HOLD
+  EV: number;
+  alignment: string;     // aligned, divergent, unknown
+  suggested_qty: number;
+}
+
+/** Open position for a specific match. */
+export interface MatchPosition {
+  market: string;
+  direction: string;
+  entry_price: number;
+  current_price: number;
+  quantity: number;
+  pnl: number;
+  bet365_aligned: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -71,9 +109,12 @@ export interface Position {
   market: string;
   direction: string;
   entry_price: number;
+  current_price?: number;
   quantity: number;
+  pnl?: number;
   entry_time: number;
-  status: string;
+  status: string;           // open, settled_win, settled_loss
+  bet365_aligned?: boolean;
 }
 
 export interface PnlPoint {

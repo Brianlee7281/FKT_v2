@@ -80,21 +80,37 @@ class GoalserveClient:
             date: Date in "dd.mm.yyyy" format.
 
         Returns:
-            List of match dicts from all leagues.
+            List of normalized match dicts from all leagues.
         """
         data = await self._get("soccerfixtures/date", {"d": date})
         matches = []
-        tournaments = data.get("scores", {}).get("tournament", [])
+        root = data.get("results", data.get("scores", {}))
+        tournaments = root.get("tournament", [])
         if isinstance(tournaments, dict):
             tournaments = [tournaments]
         for tournament in tournaments:
-            league_id = tournament.get("league_id", "")
-            tournament_matches = tournament.get("match", [])
-            if isinstance(tournament_matches, dict):
-                tournament_matches = [tournament_matches]
-            for m in tournament_matches:
-                m["league_id"] = league_id
-            matches.extend(tournament_matches)
+            league_id = tournament.get("@id", tournament.get("league_id", ""))
+            # Handle week-based or direct match structure
+            weeks = tournament.get("week", [])
+            if weeks:
+                if isinstance(weeks, dict):
+                    weeks = [weeks]
+                for week in weeks:
+                    raw = week.get("match", [])
+                    if isinstance(raw, dict):
+                        raw = [raw]
+                    for m in raw:
+                        normalized = _normalize_at_keys(m)
+                        normalized["league_id"] = league_id
+                        matches.append(normalized)
+            else:
+                raw = tournament.get("match", [])
+                if isinstance(raw, dict):
+                    raw = [raw]
+                for m in raw:
+                    normalized = _normalize_at_keys(m)
+                    normalized["league_id"] = league_id
+                    matches.append(normalized)
         return matches
 
     # ── Live Game Stats API ──
@@ -139,7 +155,7 @@ class GoalserveClient:
             date: Optional date filter.
 
         Returns:
-            List of match dicts with bookmaker odds.
+            List of normalized match dicts with bookmaker odds.
         """
         params = {}
         if date:
@@ -147,13 +163,25 @@ class GoalserveClient:
 
         data = await self._get(f"soccernew/{league_id}", params)
         matches = []
-        categories = data.get("scores", {}).get("category", {})
-        tournament_matches = categories.get("match", [])
-        if isinstance(tournament_matches, dict):
-            tournament_matches = [tournament_matches]
-        for m in tournament_matches:
-            m["league_id"] = league_id
-        matches.extend(tournament_matches)
+        root = data.get("results", data.get("scores", {}))
+        categories = root.get("category", root.get("tournament", {}))
+        if isinstance(categories, dict):
+            raw = categories.get("match", [])
+            if isinstance(raw, dict):
+                raw = [raw]
+            for m in raw:
+                normalized = _normalize_at_keys(m)
+                normalized["league_id"] = league_id
+                matches.append(normalized)
+        elif isinstance(categories, list):
+            for cat in categories:
+                raw = cat.get("match", [])
+                if isinstance(raw, dict):
+                    raw = [raw]
+                for m in raw:
+                    normalized = _normalize_at_keys(m)
+                    normalized["league_id"] = league_id
+                    matches.append(normalized)
         return matches
 
     # ── Live Score API (REST polling) ──
@@ -162,21 +190,23 @@ class GoalserveClient:
         """Fetch all live match scores (for polling).
 
         Returns:
-            List of live match dicts.
+            List of normalized live match dicts.
         """
         data = await self._get("soccerlive/home")
         matches = []
-        tournaments = data.get("scores", {}).get("tournament", [])
+        root = data.get("results", data.get("scores", {}))
+        tournaments = root.get("tournament", [])
         if isinstance(tournaments, dict):
             tournaments = [tournaments]
         for tournament in tournaments:
-            league_id = tournament.get("league_id", "")
+            league_id = tournament.get("@id", tournament.get("league_id", ""))
             t_matches = tournament.get("match", [])
             if isinstance(t_matches, dict):
                 t_matches = [t_matches]
             for m in t_matches:
-                m["league_id"] = league_id
-            matches.extend(t_matches)
+                normalized = _normalize_at_keys(m)
+                normalized["league_id"] = league_id
+                matches.append(normalized)
         return matches
 
     async def get_live_score_for_match(self, match_id: str) -> dict | None:
@@ -188,32 +218,57 @@ class GoalserveClient:
         return None
 
 
+def _normalize_at_keys(obj: Any) -> Any:
+    """Recursively strip '@' prefix from dict keys in Goalserve responses."""
+    if isinstance(obj, dict):
+        return {k.lstrip("@"): _normalize_at_keys(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_normalize_at_keys(item) for item in obj]
+    return obj
+
+
 def _extract_matches(data: dict, league_id: str) -> list[dict]:
-    """Extract match list from Goalserve fixtures response."""
+    """Extract match list from Goalserve fixtures response.
+
+    Handles the actual Goalserve response shape:
+      results.tournament.week[].match[]
+    Also normalizes @-prefixed keys (e.g. @status -> status).
+    """
     matches = []
-    # Navigate various response shapes
-    scores = data.get("scores", data)
-    if isinstance(scores, dict):
-        category = scores.get("category", scores.get("tournament", {}))
-        if isinstance(category, dict):
-            raw_matches = category.get("match", [])
-        elif isinstance(category, list):
-            raw_matches = []
-            for cat in category:
-                cat_matches = cat.get("match", [])
-                if isinstance(cat_matches, dict):
-                    cat_matches = [cat_matches]
-                raw_matches.extend(cat_matches)
-        else:
-            raw_matches = []
-    else:
-        raw_matches = []
+    raw_matches = []
 
-    if isinstance(raw_matches, dict):
-        raw_matches = [raw_matches]
+    # Primary path: results.tournament.week[].match[]
+    results = data.get("results", data.get("scores", data))
+    if isinstance(results, dict):
+        tournament = results.get("tournament", results.get("category", {}))
+        if isinstance(tournament, dict):
+            # Check for week-based structure
+            weeks = tournament.get("week", [])
+            if weeks:
+                if isinstance(weeks, dict):
+                    weeks = [weeks]
+                for week in weeks:
+                    week_matches = week.get("match", [])
+                    if isinstance(week_matches, dict):
+                        week_matches = [week_matches]
+                    raw_matches.extend(week_matches)
+            else:
+                # Fallback: direct match list
+                direct = tournament.get("match", [])
+                if isinstance(direct, dict):
+                    direct = [direct]
+                raw_matches.extend(direct)
+        elif isinstance(tournament, list):
+            for t in tournament:
+                t_matches = t.get("match", [])
+                if isinstance(t_matches, dict):
+                    t_matches = [t_matches]
+                raw_matches.extend(t_matches)
 
+    # Normalize @-prefixed keys and tag with league_id
     for m in raw_matches:
-        m["league_id"] = league_id
-        matches.append(m)
+        normalized = _normalize_at_keys(m)
+        normalized["league_id"] = league_id
+        matches.append(normalized)
 
     return matches
