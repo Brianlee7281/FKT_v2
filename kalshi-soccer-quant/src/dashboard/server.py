@@ -61,6 +61,16 @@ async def lifespan(app: FastAPI):
     if _config is None:
         _config = SystemConfig.load()
 
+    # Auto-connect to Redis if not already provided
+    if _redis is None and _config.redis_url:
+        try:
+            import redis.asyncio as aioredis
+            _redis = aioredis.from_url(_config.redis_url)
+            await _redis.ping()
+        except Exception as e:
+            log.warning("redis_connect_failed", error=str(e))
+            _redis = None
+
     app.state.config = _config
     app.state.redis = _redis
     app.state.scheduler = _scheduler
@@ -72,6 +82,9 @@ async def lifespan(app: FastAPI):
     )
 
     yield
+
+    if _redis is not None:
+        await _redis.aclose()
 
     log.info("dashboard_stopped")
 
