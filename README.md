@@ -65,9 +65,9 @@ where $C_{\text{time}} = \sum_i \exp(b_i) \cdot \Delta\tau_i$ normalizes the tim
 
 **Stage 2 — Joint NLL optimization (within-match, PyTorch):** All shared MMPP parameters are estimated by maximizing the likelihood of the observed goal sequences across the full historical dataset. The log-likelihood decomposes as:
 
-$$\ell = \sum_{m} \Bigg[\; \underbrace{\sum_{\text{goals}} \ln \lambda_T(t_k)}_{\text{point-event terms}} \;-\; \underbrace{\sum_{\text{intervals}} \int \lambda_H(t) + \lambda_A(t)\; dt}_{\text{survival terms}} \;\Bigg]$$
+$$\ell = \sum_{m} \left[ \sum_{\text{goals}} \ln \lambda_T(t_k) - \sum_{\text{intervals}} \int \lambda_H(t) + \lambda_A(t) \, dt \right]$$
 
-The integral in the survival term is computed analytically within each constant-intensity interval. Home and away goals contribute to separate NLL branches with team-specific $\gamma$ and $\delta$, enforcing the asymmetry between scoring and conceding under dismissals.
+The first sum captures **point-event terms** (log-intensity at each goal timestamp) and the second captures **survival terms** (integral of intensity over event-free intervals). Home and away goals contribute to separate NLL branches with team-specific $\gamma$ and $\delta$, enforcing the asymmetry between scoring and conceding under dismissals.
 
 **Key estimation details:**
 
@@ -148,7 +148,7 @@ where $\bar{P}_{X(t),j}^{(\ell)}$ denotes the time-averaged transition probabili
 
 **Analytic pricing formulas.** Let $G = S_H + S_A$ denote current total goals:
 
-$$P(\text{Over } N.5) = \begin{cases} 1 & \text{if } G > N \\ 1 - \displaystyle\sum_{k=0}^{N-G} \frac{\mu_{\text{total}}^{\,k} \cdot e^{-\mu_{\text{total}}}}{k!} & \text{if } G \leq N \end{cases}$$
+$$P(\text{Over } N.5) = \begin{cases} 1 & \text{if } G > N \\\\ 1 - \sum_{k=0}^{N-G} \frac{\mu_{\text{total}}^{\,k} \cdot e^{-\mu_{\text{total}}}}{k!} & \text{if } G \leq N \end{cases}$$
 
 $$P(\text{Home Win}) = \sum_{D=1}^{\infty} e^{-(\mu_H + \mu_A)} \left(\frac{\mu_H}{\mu_A}\right)^{D/2} I_{|D|}(2\sqrt{\mu_H \mu_A})$$
 
