@@ -8,7 +8,7 @@ import MuChart from './MuChart';
 import SignalPanel from './SignalPanel';
 import SourceStatus from './SourceStatus';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 interface MatchPanelProps {
   match: ActiveMatch;

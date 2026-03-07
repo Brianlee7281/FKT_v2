@@ -13,7 +13,7 @@ import {
 import type { PnlPoint } from '../../types';
 import { formatPnl } from '../../utils/formatters';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 /**
  * 2C: P&L Timeline — realized and total P&L over time.

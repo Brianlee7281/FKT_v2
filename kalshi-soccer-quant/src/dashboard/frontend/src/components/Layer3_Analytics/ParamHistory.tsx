@@ -10,7 +10,7 @@ import {
 } from 'recharts';
 import type { TradingParams } from '../../types';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 interface HistoryPoint {
   timestamp: number;

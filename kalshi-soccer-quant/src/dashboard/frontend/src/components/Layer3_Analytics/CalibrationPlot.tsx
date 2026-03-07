@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import type { CalibrationBin } from '../../types';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 const MARKET_TABS = [
   { key: 'all', label: 'All' },

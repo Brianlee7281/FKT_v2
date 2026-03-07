@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { ActiveMatch } from '../types';
 import MatchPanel from '../components/Layer1_LiveMatch/MatchPanel';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 /**
  * Layer 1: Live Matches — 2×2 grid of active match panels.

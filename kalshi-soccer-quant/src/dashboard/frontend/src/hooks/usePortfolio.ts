@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { MatchState, PortfolioSummary } from '../types';
 
-const WS_BASE = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const WS_BASE =
+  process.env.REACT_APP_WS_URL ||
+  `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+const API_BASE = process.env.REACT_APP_API_URL || '';
 const RECONNECT_DELAY = 2000;
 
 /**

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { MatchState } from '../types';
 
-const WS_BASE = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
+const WS_BASE =
+  process.env.REACT_APP_WS_URL ||
+  `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
 const RECONNECT_DELAY = 2000;
 
 /**

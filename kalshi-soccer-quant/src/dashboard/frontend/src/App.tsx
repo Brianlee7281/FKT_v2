@@ -6,7 +6,7 @@ import LiveMatchesPage from './pages/LiveMatchesPage';
 import PortfolioPage from './pages/PortfolioPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState('paper');

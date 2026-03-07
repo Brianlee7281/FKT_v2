@@ -14,7 +14,7 @@ import {
 import type { CumulativePnlPoint } from '../../types';
 import { formatPnl } from '../../utils/formatters';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 interface ApiResponse {
   series: CumulativePnlPoint[];

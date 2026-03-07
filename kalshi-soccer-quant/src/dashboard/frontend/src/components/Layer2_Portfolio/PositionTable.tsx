@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { Position } from '../../types';
 import { formatCents, formatPnl } from '../../utils/formatters';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.REACT_APP_API_URL || '';
 
 type SortKey = 'match' | 'market' | 'pnl';
 type FilterMode = 'all' | 'open' | 'settled';
