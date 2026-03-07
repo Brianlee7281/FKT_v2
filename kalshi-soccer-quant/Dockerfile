@@ -22,4 +22,4 @@ RUN poetry config virtualenvs.create false && \
 COPY . .
 
 # Default: run the scheduler
-CMD ["python", "-m", "src.scheduler.main"]
+CMD ["python", "-m", "src.scheduler"]
