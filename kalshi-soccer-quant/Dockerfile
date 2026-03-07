@@ -1,3 +1,12 @@
+### Stage 1: Build React frontend
+FROM node:18-slim AS frontend-build
+WORKDIR /frontend
+COPY src/dashboard/frontend/package.json src/dashboard/frontend/package-lock.json* ./
+RUN npm ci
+COPY src/dashboard/frontend/ ./
+RUN npm run build
+
+### Stage 2: Python app
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -20,6 +29,9 @@ RUN poetry config virtualenvs.create false && \
 
 # Copy app code
 COPY . .
+
+# Copy React build from stage 1
+COPY --from=frontend-build /frontend/build /app/src/dashboard/frontend/build
 
 # Default: run the scheduler
 CMD ["python", "-m", "src.scheduler"]
