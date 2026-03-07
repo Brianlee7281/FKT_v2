@@ -462,6 +462,43 @@ Symlink: `data/parameters/production → ./YYYYMMDD_HHMMSS/`
 
 **Verification:** All criteria pass. If any fail → iterate on Step 1.3 or 1.4.
 
+### Step 1.6: Calibration Pipeline (Orchestration)
+
+Build `src/calibration/pipeline.py` — end-to-end orchestrator that wires Steps 1.1–1.5:
+
+```
+Input:  PostgreSQL historical_matches table (7,000+ matches)
+Output: data/parameters/ directory with production params + validation report
+```
+
+Key implementation:
+- `load_matches_from_db()` — async fetch from historical_matches, convert DB rows to match dicts
+- `get_season()` / `split_by_season()` — derive season from match date for walk-forward folds
+- `run_step_1_3_simple()` — empirical a_init from league-average scoring rates (fallback when full features unavailable)
+- `run_step_1_5_fold()` — single walk-forward fold: train intervals+NLL, validate with Brier/calibration/PnL
+- `run_calibration()` — full pipeline: load → 1.1 → 1.2 → 1.3 → 1.4 → walk-forward CV → Go/No-Go → save
+
+```bash
+# Run calibration
+python -m src.calibration.pipeline
+
+# With options
+python -m src.calibration.pipeline --config config/system.yaml --output output/calibration
+```
+
+Output:
+```
+output/calibration/
+├── calibration_report.json   ← metrics, pass/fail, fold details
+├── Q_matrix.npy              ← transition matrix (4×4)
+├── params.json               ← b, γ, δ production parameters
+├── xgboost.xgb               ← ML prior model (if full features used)
+├── feature_mask.json          ← selected features
+└── median_values.json         ← imputation values
+```
+
+**Verification:** Pipeline completes end-to-end. `calibration_report.json` shows GO or NO-GO with all criteria evaluated.
+
 ---
 
 ## Phase 2: Pre-Match Pipeline (Weeks 5–6)
@@ -786,7 +823,7 @@ Look at the dashboard_implementation_roadmap.md and dashboard_design.md
 
 ### Step 5.5: systemd Services
 
-```bash
+```
 sudo systemctl enable kalshi-scheduler kalshi-dashboard kalshi-alerts kalshi-collector
 ```
 

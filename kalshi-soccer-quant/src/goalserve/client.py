@@ -57,7 +57,7 @@ class GoalserveClient:
 
     async def get_fixtures(self, league_id: str,
                            date: str | None = None) -> list[dict]:
-        """Fetch fixtures/results for a league.
+        """Fetch fixtures/results for a league (current season).
 
         Args:
             league_id: Goalserve league ID (e.g., "1204" for EPL).
@@ -71,6 +71,19 @@ class GoalserveClient:
             params["date"] = date
 
         data = await self._get(f"soccerfixtures/league/{league_id}", params)
+        return _extract_matches(data, league_id)
+
+    async def get_historical(self, league_id: str, season: str) -> list[dict]:
+        """Fetch historical fixtures/results for a league+season.
+
+        Args:
+            league_id: Goalserve league ID (e.g., "1204" for EPL).
+            season: Season string (e.g., "2023-2024").
+
+        Returns:
+            List of normalized match dicts.
+        """
+        data = await self._get(f"soccerhistory/leagueid/{league_id}-{season}")
         return _extract_matches(data, league_id)
 
     async def get_fixtures_by_date(self, date: str) -> list[dict]:
@@ -115,74 +128,82 @@ class GoalserveClient:
 
     # ── Live Game Stats API ──
 
-    async def get_match_stats(self, match_id: str) -> dict | None:
-        """Fetch detailed match stats (team + player level).
+    async def get_match_stats(self, match_id: str,
+                              league_id: str = "") -> dict | None:
+        """Fetch detailed match stats via commentaries endpoint.
 
         Args:
-            match_id: Goalserve match ID.
+            match_id: Goalserve static_id.
+            league_id: Goalserve league ID (required for single-match lookup).
 
         Returns:
-            Dict with 'stats' and 'player_stats' keys, or None if unavailable.
+            Normalized match stats dict, or None if unavailable.
         """
         try:
-            data = await self._get(f"soccerstats/match/{match_id}")
-            match_data = data.get("match", data)
+            data = await self._get(
+                f"commentaries/match",
+                {"id": match_id, "league": league_id}
+            )
+            match_data = data.get("commentaries", data.get("match", data))
             if not match_data or match_data == {}:
                 return None
-            return match_data
+            return _normalize_at_keys(match_data)
         except httpx.HTTPStatusError as e:
-            if e.response.status_code == 404:
+            if e.response.status_code in (404, 500):
                 log.debug("match_stats_not_found", match_id=match_id)
                 return None
             raise
 
-    async def get_live_stats(self, match_id: str) -> dict | None:
-        """Fetch live game stats (lineups + formation) for an upcoming/live match."""
+    async def get_commentaries_by_date(self, league_id: str,
+                                        date: str) -> dict | None:
+        """Fetch match stats/commentaries for a league on a given date.
+
+        Args:
+            league_id: Goalserve league ID.
+            date: Date in "dd.mm.yyyy" format.
+
+        Returns:
+            Normalized response dict, or None if unavailable.
+        """
         try:
-            data = await self._get(f"soccerstats/match/{match_id}")
-            return data.get("match", data)
+            data = await self._get(f"commentaries/{league_id}", {"date": date})
+            return _normalize_at_keys(data)
+        except httpx.HTTPStatusError:
+            return None
+
+    async def get_live_stats(self, league_id: str) -> dict | None:
+        """Fetch live game stats (commentaries) for a league."""
+        try:
+            data = await self._get(f"commentaries/{league_id}")
+            return _normalize_at_keys(data)
         except httpx.HTTPStatusError:
             return None
 
     # ── Pregame Odds API ──
 
-    async def get_odds(self, league_id: str,
-                       date: str | None = None) -> list[dict]:
-        """Fetch pregame odds for a league.
+    async def get_odds(self, league_id: str | None = None,
+                       date_start: str | None = None,
+                       date_end: str | None = None) -> dict:
+        """Fetch pregame odds via getodds/soccer endpoint.
 
         Args:
-            league_id: Goalserve league ID.
-            date: Optional date filter.
+            league_id: Optional Goalserve league ID filter.
+            date_start: Optional start date filter.
+            date_end: Optional end date filter.
 
         Returns:
-            List of normalized match dicts with bookmaker odds.
+            Normalized odds response dict.
         """
-        params = {}
-        if date:
-            params["date"] = date
+        params: dict[str, Any] = {"cat": "soccer_10"}
+        if league_id:
+            params["league"] = league_id
+        if date_start:
+            params["date_start"] = date_start
+        if date_end:
+            params["date_end"] = date_end
 
-        data = await self._get(f"soccernew/{league_id}", params)
-        matches = []
-        root = data.get("results", data.get("scores", {}))
-        categories = root.get("category", root.get("tournament", {}))
-        if isinstance(categories, dict):
-            raw = categories.get("match", [])
-            if isinstance(raw, dict):
-                raw = [raw]
-            for m in raw:
-                normalized = _normalize_at_keys(m)
-                normalized["league_id"] = league_id
-                matches.append(normalized)
-        elif isinstance(categories, list):
-            for cat in categories:
-                raw = cat.get("match", [])
-                if isinstance(raw, dict):
-                    raw = [raw]
-                for m in raw:
-                    normalized = _normalize_at_keys(m)
-                    normalized["league_id"] = league_id
-                    matches.append(normalized)
-        return matches
+        data = await self._get("getodds/soccer", params)
+        return _normalize_at_keys(data)
 
     # ── Live Score API (REST polling) ──
 

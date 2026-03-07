@@ -677,42 +677,70 @@ class DataCollector:
 
 ## CRON 1: RECALIBRATION — Phase 1 Retraining
 
+Implemented in `src/calibration/pipeline.py`. Run manually or via cron:
+
+```bash
+# Manual run
+python -m src.calibration.pipeline --output output/calibration
+
+# Cron (weekly, Sunday 4am UTC)
+0 4 * * 0 cd /opt/kalshi-soccer-quant && python -m src.calibration.pipeline
+```
+
+The pipeline orchestrates Steps 1.1–1.5 end-to-end:
+
+```python
+# src/calibration/pipeline.py — run_calibration()
+
+async def run_calibration(config, output_dir="output/calibration"):
+    # Load historical matches from PostgreSQL
+    all_matches = await load_matches_from_db(db)
+
+    # Step 1.1: interval segmentation
+    all_intervals = run_step_1_1(all_matches)
+
+    # Step 1.2: Q matrix
+    Q = run_step_1_2(all_intervals)
+
+    # Step 1.3: ML prior (a_init from scoring rates)
+    a_init_map = run_step_1_3_simple(all_matches)
+
+    # Step 1.4: NLL optimization (multi-start Adam → L-BFGS)
+    full_result = run_step_1_4(all_intervals, a_init_map, num_starts=5)
+
+    # Step 1.5: Walk-forward cross-validation + Go/No-Go
+    folds = [run_step_1_5_fold(train, val, i) for ...]
+    report = evaluate_go_no_go(folds, full_result)
+
+    if report.overall_pass:
+        save_production_params(full_result, output_dir)  # GO
+    return report
+```
+
+For automated recalibration triggered by Step 4.6 drift detection:
+
 ```python
 # src/calibration/recalibrate.py
 
 class Recalibrator:
     """
-    Re-runs full Phase 1 pipeline.
+    Re-runs full Phase 1 pipeline via src/calibration/pipeline.py.
     Trigger: manual, season start, or Step 4.6 automated trigger.
     """
     async def run(self, trigger_reason: str):
         log.info(f"Recalibration started. Reason: {trigger_reason}")
 
-        # Step 1.1: interval segmentation
-        intervals = await build_intervals_from_db(self.db, self.config)
+        report = await run_calibration(self.config, output_dir=self._versioned_dir())
 
-        # Step 1.2: Q matrix
-        Q = estimate_Q_matrix(intervals, self.config)
-
-        # Step 1.3: XGBoost ML
-        model, feature_mask = train_xgboost_prior(intervals, self.db, self.config)
-
-        # Step 1.4: NLL optimization
-        params = joint_nll_optimization(intervals, model, Q, self.config)
-
-        # Step 1.5: validation
-        validation = walk_forward_validation(intervals, params, self.config)
-
-        if validation.passes_all_criteria():
-            # Deploy new parameters to production (hot-reload)
-            new_version = await self.deploy_parameters(params, feature_mask, Q)
+        if report.overall_pass:
+            new_version = await self.deploy_parameters()
             log.info(f"New parameters deployed: version {new_version}")
             await self.alerter.send("INFO",
                 f"Recalibration complete. New params v{new_version}")
         else:
             log.warning("Recalibration FAILED validation. Keeping old params.")
             await self.alerter.send("WARNING",
-                f"Recalibration failed validation:\n{validation.report()}")
+                f"Recalibration failed validation. Check calibration_report.json")
 
     async def deploy_parameters(self, params, feature_mask, Q):
         """

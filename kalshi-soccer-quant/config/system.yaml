@@ -32,9 +32,9 @@ trading:
 
 # Infrastructure
 redis:
-  url: "redis://localhost:6379/0"
+  url: "redis://${REDIS_HOST:-localhost}:6379/0"
 postgres:
-  url: "postgresql://kalshi:${DB_PASSWORD}@localhost:5432/kalshi"
+  url: "postgresql://kalshi:${DB_PASSWORD}@${POSTGRES_HOST:-localhost}:5432/kalshi"
 
 # Alerts
 alerts:

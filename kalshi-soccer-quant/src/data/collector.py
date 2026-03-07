@@ -49,27 +49,37 @@ class DataCollector:
         """One-time backfill of historical match data.
 
         For each league+season:
-          1. Fetch fixtures/results
-          2. For each completed match, fetch detailed stats
-          3. Fetch pregame odds
+          1. Fetch fixtures/results via soccerhistory endpoint
+          2. Upsert completed matches into DB
 
         Args:
             league_ids: Goalserve league IDs.
-            seasons: Season identifiers (e.g., ["2020", "2021", "2022"]).
+            seasons: Season identifiers (e.g., ["2022-2023", "2023-2024"]).
+                     Single years like "2023" are auto-converted to "2023-2024".
         """
         total_matches = 0
 
         for league_id in league_ids:
             for season in seasons:
-                log.info("backfill_season", league_id=league_id, season=season)
+                # Convert "2023" → "2023-2024" if needed
+                if "-" not in season:
+                    season_str = f"{season}-{int(season)+1}"
+                else:
+                    season_str = season
+
+                log.info("backfill_season", league_id=league_id,
+                         season=season_str)
 
                 try:
-                    fixtures = await self.goalserve.get_fixtures(league_id)
+                    fixtures = await self.goalserve.get_historical(
+                        league_id, season_str)
                 except Exception as e:
                     log.error("backfill_fixtures_failed",
-                              league_id=league_id, season=season, error=str(e))
+                              league_id=league_id, season=season_str,
+                              error=str(e))
                     continue
 
+                inserted = 0
                 for match in fixtures:
                     status = match.get("status", "")
                     if status not in ("FT", "Full-time", "AET", "Pen."):
@@ -78,26 +88,34 @@ class DataCollector:
                     match["league_id"] = league_id
                     await self.db.upsert_match_result(match)
                     total_matches += 1
-
-                    # Fetch detailed stats
-                    match_id = match.get("id", match.get("static_id", ""))
-                    if match_id:
-                        await self._fetch_and_store_stats(match_id)
-
-                    await asyncio.sleep(RATE_LIMIT_DELAY)
-
-                # Fetch odds for this league
-                try:
-                    odds_matches = await self.goalserve.get_odds(league_id)
-                    for odds_match in odds_matches:
-                        await self.db.upsert_match_odds(odds_match)
-                    await asyncio.sleep(RATE_LIMIT_DELAY)
-                except Exception as e:
-                    log.error("backfill_odds_failed",
-                              league_id=league_id, error=str(e))
+                    inserted += 1
 
                 log.info("backfill_season_done",
-                         league_id=league_id, season=season)
+                         league_id=league_id, season=season_str,
+                         inserted=inserted)
+
+                await asyncio.sleep(RATE_LIMIT_DELAY)
+
+        # Also fetch current season for each league
+        for league_id in league_ids:
+            log.info("backfill_current_season", league_id=league_id)
+            try:
+                fixtures = await self.goalserve.get_fixtures(league_id)
+                inserted = 0
+                for match in fixtures:
+                    status = match.get("status", "")
+                    if status not in ("FT", "Full-time", "AET", "Pen."):
+                        continue
+                    match["league_id"] = league_id
+                    await self.db.upsert_match_result(match)
+                    total_matches += 1
+                    inserted += 1
+                log.info("backfill_current_done",
+                         league_id=league_id, inserted=inserted)
+            except Exception as e:
+                log.error("backfill_current_failed",
+                          league_id=league_id, error=str(e))
+            await asyncio.sleep(RATE_LIMIT_DELAY)
 
         count = await self.db.get_match_count()
         log.info("backfill_complete", total_inserted=total_matches,
@@ -128,14 +146,14 @@ class DataCollector:
 
                 match_id = match.get("id", match.get("static_id", ""))
                 if match_id:
-                    await self._fetch_and_store_stats(match_id)
+                    await self._fetch_and_store_stats(match_id, league_id)
                     await asyncio.sleep(RATE_LIMIT_DELAY)
 
             # Odds
             try:
-                odds_matches = await self.goalserve.get_odds(league_id, date=yesterday)
-                for odds_match in odds_matches:
-                    await self.db.upsert_match_odds(odds_match)
+                odds_data = await self.goalserve.get_odds(
+                    league_id=league_id, date_start=yesterday)
+                await self.db.upsert_odds_snapshot(league_id, odds_data)
             except Exception as e:
                 log.error("daily_odds_failed",
                           league_id=league_id, date=yesterday, error=str(e))
@@ -146,9 +164,8 @@ class DataCollector:
         """Periodic odds snapshot (every 6 hours)."""
         for league_id in self.config.target_leagues:
             try:
-                odds_matches = await self.goalserve.get_odds(league_id)
-                for odds_match in odds_matches:
-                    await self.db.upsert_match_odds(odds_match)
+                odds_data = await self.goalserve.get_odds(league_id=league_id)
+                await self.db.upsert_odds_snapshot(league_id, odds_data)
                 await asyncio.sleep(RATE_LIMIT_DELAY)
             except Exception as e:
                 log.error("odds_snapshot_failed",
@@ -173,10 +190,11 @@ class DataCollector:
 
     # ── Internal helpers ──
 
-    async def _fetch_and_store_stats(self, match_id: str) -> None:
-        """Fetch match stats and store in DB."""
+    async def _fetch_and_store_stats(self, match_id: str,
+                                     league_id: str = "") -> None:
+        """Fetch match stats via commentaries and store in DB."""
         try:
-            stats = await self.goalserve.get_match_stats(match_id)
+            stats = await self.goalserve.get_match_stats(match_id, league_id)
             if stats:
                 await self.db.upsert_match_stats(match_id, stats)
         except Exception as e:

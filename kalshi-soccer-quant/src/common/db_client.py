@@ -143,6 +143,19 @@ class DBClient:
             json.dumps(match_odds.get("bookmakers", match_odds)),
         )
 
+    async def upsert_odds_snapshot(self, league_id: str, odds_data: dict) -> None:
+        """Store a bulk odds snapshot for a league."""
+        await self.execute(
+            """
+            UPDATE historical_matches
+            SET odds = $2,
+                collected_at = NOW()
+            WHERE league_id = $1 AND odds IS NULL
+            """,
+            league_id,
+            json.dumps(odds_data),
+        )
+
     async def get_match_count(self) -> int:
         result = await self.fetchval("SELECT COUNT(*) FROM historical_matches")
         return result or 0
