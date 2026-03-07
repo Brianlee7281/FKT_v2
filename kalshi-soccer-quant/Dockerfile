@@ -2,7 +2,7 @@
 FROM node:18-slim AS frontend-build
 WORKDIR /frontend
 COPY src/dashboard/frontend/package.json src/dashboard/frontend/package-lock.json* ./
-RUN npm ci
+RUN npm install
 COPY src/dashboard/frontend/ ./
 RUN npm run build
 
