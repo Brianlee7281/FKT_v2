@@ -1,0 +1,228 @@
+time="2026-03-07T02:03:12-05:00" level=warning msg="/Users/euijinlee/Documents/GitHub/FKT_v2/kalshi-soccer-quant/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion"
+ Image kalshi-soccer-quant-scheduler Building 
+ Image kalshi-soccer-quant-dashboard Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 1.13kB done
+#1 DONE 0.0s
+
+#2 [dashboard internal] load build definition from Dockerfile
+#2 transferring dockerfile: 1.10kB done
+#2 DONE 0.0s
+
+#3 [scheduler internal] load metadata for docker.io/library/node:18-slim
+#3 ...
+
+#4 [auth] library/node:pull token for registry-1.docker.io
+#4 DONE 0.0s
+
+#5 [auth] library/python:pull token for registry-1.docker.io
+#5 DONE 0.0s
+
+#6 [dashboard internal] load metadata for docker.io/library/python:3.11-slim
+#6 DONE 0.8s
+
+#3 [scheduler internal] load metadata for docker.io/library/node:18-slim
+#3 DONE 0.8s
+
+#7 [scheduler internal] load .dockerignore
+#7 transferring context: 201B done
+#7 DONE 0.0s
+
+#8 [dashboard frontend-build 1/6] FROM docker.io/library/node:18-slim@sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e
+#8 resolve docker.io/library/node:18-slim@sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e done
+#8 ...
+
+#9 [dashboard internal] load build context
+#9 transferring context: 1.89MB 0.0s done
+#9 DONE 0.1s
+
+#8 [dashboard frontend-build 1/6] FROM docker.io/library/node:18-slim@sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e
+#8 sha256:378bc28767f6d83e7481f8c90d0e8be1140bb875d4f1c67dea8b3b52baa48282 448B / 448B 0.1s done
+#8 sha256:2f0d35c51a75cbc9fc4ddeb36aa3e8b7e268306bffe70543e6b02627a54a13c4 0B / 1.71MB 0.2s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 0B / 38.30MB 0.2s
+#8 sha256:2f0d35c51a75cbc9fc4ddeb36aa3e8b7e268306bffe70543e6b02627a54a13c4 1.05MB / 1.71MB 0.8s
+#8 sha256:2f0d35c51a75cbc9fc4ddeb36aa3e8b7e268306bffe70543e6b02627a54a13c4 1.71MB / 1.71MB 0.9s done
+#8 sha256:2f0d35c51a75cbc9fc4ddeb36aa3e8b7e268306bffe70543e6b02627a54a13c4 1.71MB / 1.71MB 0.9s done
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 0B / 28.07MB 0.2s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 2.10MB / 38.30MB 1.1s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 4.19MB / 38.30MB 1.7s
+#8 sha256:96432eac497bc44f4b93d2e24bdf250d7798a55274aa2d7c5495988bf30191f7 0B / 3.31kB 0.2s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 2.10MB / 28.07MB 1.2s
+#8 sha256:96432eac497bc44f4b93d2e24bdf250d7798a55274aa2d7c5495988bf30191f7 3.31kB / 3.31kB 0.2s done
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 6.29MB / 38.30MB 2.1s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 8.39MB / 38.30MB 2.6s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 4.19MB / 28.07MB 2.0s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 11.53MB / 38.30MB 3.0s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 6.29MB / 28.07MB 2.4s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 15.73MB / 38.30MB 3.3s
+#8 ...
+
+#10 [dashboard stage-1 1/9] FROM docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47
+#10 resolve docker.io/library/python:3.11-slim@sha256:d6e4d224f70f9e0172a06a3a2eba2f768eb146811a349278b38fff3a36463b47 done
+#10 sha256:f378e81ff313c648c10b945bc6e947fdeb51431300952528219df8382d52c4de 250B / 250B 0.1s done
+#10 sha256:7976ed97cbf4ee7b85a5869ec9adc74a73240241362f8d6e406a2e3ff373b54b 14.31MB / 14.31MB 2.0s done
+#10 sha256:c45f5486ef43b5210c68f8c7891b71371d42811a9fe71cee67996c5ddfb7721c 1.27MB / 1.27MB 0.3s done
+#10 sha256:3b66ab8c894cad95899b704e688938517870850391d1349c862c2b09214acb86 30.14MB / 30.14MB 3.2s done
+#10 extracting sha256:3b66ab8c894cad95899b704e688938517870850391d1349c862c2b09214acb86 0.4s done
+#10 extracting sha256:c45f5486ef43b5210c68f8c7891b71371d42811a9fe71cee67996c5ddfb7721c 0.0s done
+#10 extracting sha256:7976ed97cbf4ee7b85a5869ec9adc74a73240241362f8d6e406a2e3ff373b54b 0.2s done
+#10 extracting sha256:f378e81ff313c648c10b945bc6e947fdeb51431300952528219df8382d52c4de done
+#10 DONE 3.8s
+
+#8 [dashboard frontend-build 1/6] FROM docker.io/library/node:18-slim@sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 17.83MB / 38.30MB 3.5s
+#8 ...
+
+#11 [scheduler stage-1 2/9] WORKDIR /app
+#11 DONE 0.1s
+
+#8 [dashboard frontend-build 1/6] FROM docker.io/library/node:18-slim@sha256:f9ab18e354e6855ae56ef2b290dd225c1e51a564f87584b9bd21dd651838830e
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 19.92MB / 38.30MB 3.6s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 8.39MB / 28.07MB 2.9s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 23.07MB / 38.30MB 3.8s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 25.17MB / 38.30MB 3.9s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 28.31MB / 38.30MB 4.1s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 10.49MB / 28.07MB 3.3s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 30.41MB / 38.30MB 4.2s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 33.55MB / 38.30MB 4.4s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 35.65MB / 38.30MB 4.5s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 12.58MB / 28.07MB 3.8s
+#8 sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 38.30MB / 38.30MB 4.7s done
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 14.68MB / 28.07MB 4.2s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 16.78MB / 28.07MB 4.4s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 18.87MB / 28.07MB 4.7s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 20.97MB / 28.07MB 4.8s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 24.12MB / 28.07MB 5.0s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 28.07MB / 28.07MB 5.1s
+#8 sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 28.07MB / 28.07MB 5.1s done
+#8 extracting sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818
+#8 extracting sha256:b16f1b16678093d11ecfece1004207a40f9bc1b7d9d1d16a070c1db552038818 0.3s done
+#8 extracting sha256:96432eac497bc44f4b93d2e24bdf250d7798a55274aa2d7c5495988bf30191f7 done
+#8 extracting sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72
+#8 extracting sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 0.4s done
+#8 extracting sha256:bab3dec6af72cc8d9f12335fe020276b8288070bafb8efa2c5308b56d14d8e72 0.4s done
+#8 extracting sha256:2f0d35c51a75cbc9fc4ddeb36aa3e8b7e268306bffe70543e6b02627a54a13c4 0.0s done
+#8 extracting sha256:378bc28767f6d83e7481f8c90d0e8be1140bb875d4f1c67dea8b3b52baa48282 done
+#8 DONE 7.1s
+
+#12 [scheduler frontend-build 2/6] WORKDIR /frontend
+#12 DONE 0.1s
+
+#13 [dashboard frontend-build 3/6] COPY src/dashboard/frontend/package.json src/dashboard/frontend/package-lock.json* ./
+#13 DONE 0.0s
+
+#14 [dashboard frontend-build 4/6] RUN npm ci
+#14 0.652 npm error code EUSAGE
+#14 0.652 npm error
+#14 0.652 npm error `npm ci` can only install packages when your package.json and package-lock.json or npm-shrinkwrap.json are in sync. Please update your lock file with `npm install` before continuing.
+#14 0.652 npm error
+#14 0.652 npm error Missing: yaml@2.8.2 from lock file
+#14 0.652 npm error
+#14 0.652 npm error Clean install a project
+#14 0.652 npm error
+#14 0.652 npm error Usage:
+#14 0.652 npm error npm ci
+#14 0.652 npm error
+#14 0.652 npm error Options:
+#14 0.652 npm error [--install-strategy <hoisted|nested|shallow|linked>] [--legacy-bundling]
+#14 0.652 npm error [--global-style] [--omit <dev|optional|peer> [--omit <dev|optional|peer> ...]]
+#14 0.652 npm error [--include <prod|dev|optional|peer> [--include <prod|dev|optional|peer> ...]]
+#14 0.652 npm error [--strict-peer-deps] [--foreground-scripts] [--ignore-scripts] [--no-audit]
+#14 0.652 npm error [--no-bin-links] [--no-fund] [--dry-run]
+#14 0.652 npm error [-w|--workspace <workspace-name> [-w|--workspace <workspace-name> ...]]
+#14 0.652 npm error [-ws|--workspaces] [--include-workspace-root] [--install-links]
+#14 0.652 npm error
+#14 0.652 npm error aliases: clean-install, ic, install-clean, isntall-clean
+#14 0.652 npm error
+#14 0.652 npm error Run "npm help ci" for more info
+#14 0.653 npm notice
+#14 0.653 npm notice New major version of npm available! 10.8.2 -> 11.11.0
+#14 0.653 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.11.0
+#14 0.653 npm notice To update run: npm install -g npm@11.11.0
+#14 0.653 npm notice
+#14 0.653 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-07T07_03_20_755Z-debug-0.log
+#14 ERROR: process "/bin/sh -c npm ci" did not complete successfully: exit code: 1
+
+#15 [dashboard stage-1 3/9] RUN apt-get update && apt-get install -y --no-install-recommends     gcc libpq-dev &&     rm -rf /var/lib/apt/lists/*
+#15 0.453 Hit:1 http://deb.debian.org/debian trixie InRelease
+#15 0.534 Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+#15 0.636 Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+#15 0.661 Get:4 http://deb.debian.org/debian trixie/main arm64 Packages [9607 kB]
+#15 1.815 Get:5 http://deb.debian.org/debian trixie-updates/main arm64 Packages [5404 B]
+#15 1.826 Get:6 http://deb.debian.org/debian-security trixie-security/main arm64 Packages [108 kB]
+#15 2.390 Fetched 9812 kB in 2s (4576 kB/s)
+#15 2.390 Reading package lists...
+#15 2.690 Reading package lists...
+#15 2.980 Building dependency tree...
+#15 3.063 Reading state information...
+#15 3.191 The following additional packages will be installed:
+#15 3.191   binutils binutils-aarch64-linux-gnu binutils-common cpp cpp-14
+#15 3.191   cpp-14-aarch64-linux-gnu cpp-aarch64-linux-gnu gcc-14
+#15 3.191   gcc-14-aarch64-linux-gnu gcc-aarch64-linux-gnu libasan8 libatomic1
+#15 3.191   libbinutils libcc1-0 libcom-err2 libctf-nobfd0 libctf0 libgcc-14-dev
+#15 3.191   libgomp1 libgprofng0 libgssapi-krb5-2 libhwasan0 libisl23 libitm1
+#15 3.191   libjansson4 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2
+#15 3.192   liblsan0 libmpc3 libmpfr6 libpq5 libsasl2-2 libsasl2-modules-db libsframe1
+#15 3.192   libssl-dev libtsan2 libubsan1
+#15 3.193 Suggested packages:
+#15 3.193   binutils-doc gprofng-gui binutils-gold cpp-doc gcc-14-locales cpp-14-doc
+#15 3.193   gcc-multilib make manpages-dev autoconf automake libtool flex bison gdb
+#15 3.193   gcc-doc gcc-14-doc gdb-aarch64-linux-gnu krb5-doc krb5-user
+#15 3.193   postgresql-doc-17 libssl-doc
+#15 3.193 Recommended packages:
+#15 3.193   libc6-dev | libc-dev libc6-dev libc-dev krb5-locales libldap-common
+#15 3.193   libsasl2-modules
+#15 3.323 The following NEW packages will be installed:
+#15 3.323   binutils binutils-aarch64-linux-gnu binutils-common cpp cpp-14
+#15 3.323   cpp-14-aarch64-linux-gnu cpp-aarch64-linux-gnu gcc gcc-14
+#15 3.323   gcc-14-aarch64-linux-gnu gcc-aarch64-linux-gnu libasan8 libatomic1
+#15 3.323   libbinutils libcc1-0 libcom-err2 libctf-nobfd0 libctf0 libgcc-14-dev
+#15 3.323   libgomp1 libgprofng0 libgssapi-krb5-2 libhwasan0 libisl23 libitm1
+#15 3.323   libjansson4 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libldap2
+#15 3.323   liblsan0 libmpc3 libmpfr6 libpq-dev libpq5 libsasl2-2 libsasl2-modules-db
+#15 3.323   libsframe1 libssl-dev libtsan2 libubsan1
+#15 3.364 0 upgraded, 42 newly installed, 0 to remove and 0 not upgraded.
+#15 3.364 Need to get 49.8 MB of archives.
+#15 3.364 After this operation, 204 MB of additional disk space will be used.
+#15 3.364 Get:1 http://deb.debian.org/debian trixie/main arm64 libsframe1 arm64 2.44-3 [77.8 kB]
+#15 3.394 Get:2 http://deb.debian.org/debian trixie/main arm64 binutils-common arm64 2.44-3 [2509 kB]
+#15 3.567 Get:3 http://deb.debian.org/debian trixie/main arm64 libbinutils arm64 2.44-3 [660 kB]
+#15 3.616 Get:4 http://deb.debian.org/debian trixie/main arm64 libgprofng0 arm64 2.44-3 [668 kB]
+#15 3.696 Get:5 http://deb.debian.org/debian trixie/main arm64 libctf-nobfd0 arm64 2.44-3 [152 kB]
+#15 3.718 Get:6 http://deb.debian.org/debian trixie/main arm64 libctf0 arm64 2.44-3 [84.2 kB]
+#15 3.724 Get:7 http://deb.debian.org/debian trixie/main arm64 libjansson4 arm64 2.14-2+b3 [39.2 kB]
+#15 3.727 Get:8 http://deb.debian.org/debian trixie/main arm64 binutils-aarch64-linux-gnu arm64 2.44-3 [820 kB]
+#15 3.855 Get:9 http://deb.debian.org/debian trixie/main arm64 binutils arm64 2.44-3 [262 kB]
+#15 3.888 Get:10 http://deb.debian.org/debian trixie/main arm64 libisl23 arm64 0.27-1 [601 kB]
+#15 CANCELED
+------
+ > [dashboard frontend-build 4/6] RUN npm ci:
+0.652 npm error
+0.652 npm error aliases: clean-install, ic, install-clean, isntall-clean
+0.652 npm error
+0.652 npm error Run "npm help ci" for more info
+0.653 npm notice
+0.653 npm notice New major version of npm available! 10.8.2 -> 11.11.0
+0.653 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.11.0
+0.653 npm notice To update run: npm install -g npm@11.11.0
+0.653 npm notice
+0.653 npm error A complete log of this run can be found in: /root/.npm/_logs/2026-03-07T07_03_20_755Z-debug-0.log
+------
+Dockerfile:5
+
+--------------------
+
+   3 |     WORKDIR /frontend
+
+   4 |     COPY src/dashboard/frontend/package.json src/dashboard/frontend/package-lock.json* ./
+
+   5 | >>> RUN npm ci
+
+   6 |     COPY src/dashboard/frontend/ ./
+
+   7 |     RUN npm run build
+
+--------------------
+
+target dashboard: failed to solve: process "/bin/sh -c npm ci" did not complete successfully: exit code: 1
+

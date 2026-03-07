@@ -112,6 +112,8 @@ def _collect_events(match_data: dict, alpha_1: float, T_m: float) -> list[_Event
     events: list[_Event] = []
     summary = match_data.get("summary", {})
 
+    # --- Format A: Detailed summary with per-team goals/redcards ---
+    # Structure: summary.localteam.goals.player, summary.visitorteam.goals.player
     for team_key in ("localteam", "visitorteam"):
         team_summary = summary.get(team_key, {})
         if not team_summary:
@@ -122,16 +124,12 @@ def _collect_events(match_data: dict, alpha_1: float, T_m: float) -> list[_Event
         if goals_data:
             raw_goals = ensure_list(goals_data.get("player", []))
             for g in raw_goals:
-                # VAR-cancelled goals are fully excluded
                 if _is_true(g.get("var_cancelled")):
                     continue
 
                 minute = parse_minute(g.get("minute", 0), g.get("extra_min", ""))
                 is_owngoal = _is_true(g.get("owngoal"))
 
-                # For own goals: the recorded team is the team whose player
-                # scored the own goal.  The *scoring* team (who gets the point)
-                # is the opponent.
                 if is_owngoal:
                     scoring_team = "visitorteam" if team_key == "localteam" else "localteam"
                 else:
@@ -156,6 +154,46 @@ def _collect_events(match_data: dict, alpha_1: float, T_m: float) -> list[_Event
                     minute=minute,
                     team=team_key,
                     raw=r,
+                ))
+
+    # --- Format B: Flat goals list from Goalserve fixtures endpoint ---
+    # Structure: summary.goal (list of {team, minute, player, ...})
+    # or match_data.goals.goal
+    if not any(e.kind == "goal" for e in events):
+        # Try flat format from goals field
+        goals_src = summary if isinstance(summary, dict) else {}
+        flat_goals = goals_src.get("goal", [])
+        if not flat_goals:
+            goals_field = match_data.get("goals", {})
+            if isinstance(goals_field, dict):
+                flat_goals = goals_field.get("goal", [])
+        flat_goals = ensure_list(flat_goals) if flat_goals else []
+
+        for g in flat_goals:
+            minute_str = g.get("minute", "0")
+            # Handle "45+2" stoppage time format
+            extra = ""
+            if isinstance(minute_str, str) and "+" in minute_str:
+                parts = minute_str.split("+")
+                minute_str = parts[0]
+                extra = parts[1] if len(parts) > 1 else ""
+            minute = parse_minute(minute_str, extra)
+
+            team = g.get("team", "")
+            is_owngoal = "(OG)" in g.get("player", "") or _is_true(g.get("owngoal"))
+
+            if is_owngoal:
+                scoring_team = "visitorteam" if team == "localteam" else "localteam"
+            else:
+                scoring_team = team
+
+            if scoring_team in ("localteam", "visitorteam"):
+                events.append(_Event(
+                    kind="goal",
+                    minute=minute,
+                    team=scoring_team,
+                    is_owngoal=is_owngoal,
+                    raw=g,
                 ))
 
     # Period boundaries

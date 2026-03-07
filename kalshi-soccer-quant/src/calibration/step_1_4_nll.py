@@ -14,6 +14,7 @@ Reference: phase1.md → Step 1.4
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -256,7 +257,7 @@ def preprocess_intervals(
 # ---------------------------------------------------------------------------
 
 class MMPPLoss(nn.Module):
-    """MMPP Negative Log-Likelihood with regularization.
+    """MMPP Negative Log-Likelihood with regularization (vectorized).
 
     Learnable parameters:
         a_H[M], a_A[M]: match-level baseline intensities
@@ -265,6 +266,9 @@ class MMPPLoss(nn.Module):
         gamma_A[2]:      away-team red-card penalty (γ^A_1, γ^A_2)
         delta_H[4]:      home score-difference effect
         delta_A[4]:      away score-difference effect
+
+    All interval/goal data is pre-indexed into tensors at init time,
+    so forward() uses pure tensor ops with no Python loops.
     """
 
     def __init__(
@@ -274,7 +278,6 @@ class MMPPLoss(nn.Module):
         lambda_reg: float = 0.01,
     ):
         super().__init__()
-        self.match_data = match_data
         self.sigma_a = sigma_a
         self.lambda_reg = lambda_reg
 
@@ -291,92 +294,125 @@ class MMPPLoss(nn.Module):
 
         # Shared parameters
         self.b = nn.Parameter(torch.zeros(N_TIME_BINS, dtype=torch.float64))
-        self.gamma_H = nn.Parameter(torch.zeros(2, dtype=torch.float64))  # γ^H_1, γ^H_2
-        self.gamma_A = nn.Parameter(torch.zeros(2, dtype=torch.float64))  # γ^A_1, γ^A_2
-        self.delta_H = nn.Parameter(torch.zeros(4, dtype=torch.float64))  # ΔS: ≤-2, -1, +1, ≥+2
+        self.gamma_H = nn.Parameter(torch.zeros(2, dtype=torch.float64))
+        self.gamma_A = nn.Parameter(torch.zeros(2, dtype=torch.float64))
+        self.delta_H = nn.Parameter(torch.zeros(4, dtype=torch.float64))
         self.delta_A = nn.Parameter(torch.zeros(4, dtype=torch.float64))
 
-    def get_gamma_H(self, state_X: int) -> torch.Tensor:
-        """Get γ^H for Markov state X."""
-        if state_X == 0:
-            return torch.tensor(0.0, dtype=torch.float64)
-        elif state_X == 1:
-            return self.gamma_H[0]          # γ^H_1
-        elif state_X == 2:
-            return self.gamma_H[1]          # γ^H_2
-        else:  # state 3: additive
-            return self.gamma_H[0] + self.gamma_H[1]
+        # --- Pre-build index tensors for vectorized forward ---
 
-    def get_gamma_A(self, state_X: int) -> torch.Tensor:
-        """Get γ^A for Markov state X."""
-        if state_X == 0:
-            return torch.tensor(0.0, dtype=torch.float64)
-        elif state_X == 1:
-            return self.gamma_A[0]          # γ^A_1
-        elif state_X == 2:
-            return self.gamma_A[1]          # γ^A_2
-        else:
-            return self.gamma_A[0] + self.gamma_A[1]
+        # Integration sub-intervals: one entry per (interval, time_bin) pair
+        int_match_list = []
+        int_bin_list = []
+        int_state_list = []
+        int_delta_list = []   # shifted: original -1 → 0, original 0 → 1, etc.
+        int_dur_list = []
 
-    def get_delta_H(self, delta_S_idx: int) -> torch.Tensor:
-        """Get δ_H for a ΔS index (-1 means ΔS=0, return 0)."""
-        if delta_S_idx == -1:
-            return torch.tensor(0.0, dtype=torch.float64)
-        return self.delta_H[delta_S_idx]
+        # Goal point events: one entry per non-own-goal
+        goal_match_list = []
+        goal_bin_list = []
+        goal_state_list = []
+        goal_delta_list = []
+        goal_is_home_list = []
 
-    def get_delta_A(self, delta_S_idx: int) -> torch.Tensor:
-        """Get δ_A for a ΔS index."""
-        if delta_S_idx == -1:
-            return torch.tensor(0.0, dtype=torch.float64)
-        return self.delta_A[delta_S_idx]
-
-    def forward(self) -> torch.Tensor:
-        """Compute total loss = NLL + regularization."""
-        nll = torch.tensor(0.0, dtype=torch.float64)
-
-        for md in self.match_data:
+        for md in match_data:
             m = md.match_idx
-            a_h = self.a_H[m]
-            a_a = self.a_A[m]
-
             for iv in md.intervals:
                 if iv.is_halftime or not iv.bin_durations:
                     continue
 
-                g_h = self.get_gamma_H(iv.state_X)
-                g_a = self.get_gamma_A(iv.state_X)
                 d_s_idx = delta_S_to_index(iv.delta_S)
-                d_h = self.get_delta_H(d_s_idx)
-                d_a = self.get_delta_A(d_s_idx)
+                d_s_shifted = d_s_idx + 1  # -1→0, 0→1, 1→2, 2→3, 3→4
 
-                # Integration term: split across time bins
                 for bin_idx, duration in iv.bin_durations:
-                    b_val = self.b[bin_idx]
-                    mu_h = torch.exp(a_h + b_val + g_h + d_h) * duration
-                    mu_a = torch.exp(a_a + b_val + g_a + d_a) * duration
-                    nll += mu_h + mu_a
+                    int_match_list.append(m)
+                    int_bin_list.append(bin_idx)
+                    int_state_list.append(iv.state_X)
+                    int_delta_list.append(d_s_shifted)
+                    int_dur_list.append(duration)
 
-                # Point-event terms: Σ ln λ for non-own-goal events
                 for gi in range(len(iv.goal_is_home)):
                     if iv.goal_is_owngoal[gi]:
-                        continue  # Own goals excluded from point-event
+                        continue
 
                     gb = iv.goal_time_bins[gi]
                     if gb == -1:
-                        # Fallback: use first available bin from this interval
                         gb = iv.bin_durations[0][0] if iv.bin_durations else 0
+                    if gb < 0 or gb >= N_TIME_BINS:
+                        gb = 0
 
                     g_delta_idx = iv.goal_delta_indices[gi]
-                    b_goal = self.b[gb] if 0 <= gb < N_TIME_BINS else self.b[0]
+                    g_delta_shifted = g_delta_idx + 1
 
-                    if iv.goal_is_home[gi]:
-                        d_goal = self.get_delta_H(g_delta_idx)
-                        ln_lambda = a_h + b_goal + g_h + d_goal
-                    else:
-                        d_goal = self.get_delta_A(g_delta_idx)
-                        ln_lambda = a_a + b_goal + g_a + d_goal
+                    goal_match_list.append(m)
+                    goal_bin_list.append(gb)
+                    goal_state_list.append(iv.state_X)
+                    goal_delta_list.append(g_delta_shifted)
+                    goal_is_home_list.append(iv.goal_is_home[gi])
 
-                    nll -= ln_lambda
+        self.register_buffer("int_match", torch.tensor(int_match_list, dtype=torch.long))
+        self.register_buffer("int_bin", torch.tensor(int_bin_list, dtype=torch.long))
+        self.register_buffer("int_state", torch.tensor(int_state_list, dtype=torch.long))
+        self.register_buffer("int_delta", torch.tensor(int_delta_list, dtype=torch.long))
+        self.register_buffer("int_dur", torch.tensor(int_dur_list, dtype=torch.float64))
+
+        self.register_buffer("goal_match", torch.tensor(goal_match_list, dtype=torch.long))
+        self.register_buffer("goal_bin", torch.tensor(goal_bin_list, dtype=torch.long))
+        self.register_buffer("goal_state", torch.tensor(goal_state_list, dtype=torch.long))
+        self.register_buffer("goal_delta", torch.tensor(goal_delta_list, dtype=torch.long))
+        self.register_buffer("goal_is_home", torch.tensor(goal_is_home_list, dtype=torch.bool))
+
+    def _build_gamma_full(self):
+        """Build [4] gamma vectors: [0, γ_1, γ_2, γ_1+γ_2]."""
+        zero = torch.tensor([0.0], dtype=torch.float64)
+        gamma_H_full = torch.cat([zero, self.gamma_H[:1], self.gamma_H[1:],
+                                  (self.gamma_H[0] + self.gamma_H[1]).unsqueeze(0)])
+        gamma_A_full = torch.cat([zero, self.gamma_A[:1], self.gamma_A[1:],
+                                  (self.gamma_A[0] + self.gamma_A[1]).unsqueeze(0)])
+        return gamma_H_full, gamma_A_full
+
+    def _build_delta_full(self):
+        """Build [5] delta vectors: [0, δ_0, δ_1, δ_2, δ_3] (index 0 = no effect)."""
+        zero = torch.tensor([0.0], dtype=torch.float64)
+        delta_H_full = torch.cat([zero, self.delta_H])
+        delta_A_full = torch.cat([zero, self.delta_A])
+        return delta_H_full, delta_A_full
+
+    def forward(self) -> torch.Tensor:
+        """Compute total loss = NLL + regularization (fully vectorized)."""
+        gamma_H_full, gamma_A_full = self._build_gamma_full()
+        delta_H_full, delta_A_full = self._build_delta_full()
+
+        # --- Integration term (survival): sum of exp(lin) * duration ---
+        a_h_int = self.a_H[self.int_match]
+        a_a_int = self.a_A[self.int_match]
+        b_int = self.b[self.int_bin]
+        g_h_int = gamma_H_full[self.int_state]
+        g_a_int = gamma_A_full[self.int_state]
+        d_h_int = delta_H_full[self.int_delta]
+        d_a_int = delta_A_full[self.int_delta]
+
+        # Clamp exponents to prevent exp() overflow/underflow
+        lin_h = torch.clamp(a_h_int + b_int + g_h_int + d_h_int, -20.0, 20.0)
+        lin_a = torch.clamp(a_a_int + b_int + g_a_int + d_a_int, -20.0, 20.0)
+        mu_h = torch.exp(lin_h) * self.int_dur
+        mu_a = torch.exp(lin_a) * self.int_dur
+        nll = torch.sum(mu_h) + torch.sum(mu_a)
+
+        # --- Point-event term (goals): sum of ln(lambda) ---
+        if self.goal_match.numel() > 0:
+            a_h_g = self.a_H[self.goal_match]
+            a_a_g = self.a_A[self.goal_match]
+            b_g = self.b[self.goal_bin]
+            g_h_g = gamma_H_full[self.goal_state]
+            g_a_g = gamma_A_full[self.goal_state]
+            d_h_g = delta_H_full[self.goal_delta]
+            d_a_g = delta_A_full[self.goal_delta]
+
+            ln_lam_h = a_h_g + b_g + g_h_g + d_h_g
+            ln_lam_a = a_a_g + b_g + g_a_g + d_a_g
+            ln_lam = torch.where(self.goal_is_home, ln_lam_h, ln_lam_a)
+            nll -= torch.sum(ln_lam)
 
         # ML Prior regularization: (a - a_init)^2 / (2σ²)
         reg_a = (1.0 / (2.0 * self.sigma_a ** 2)) * (
@@ -473,11 +509,15 @@ def train_nll(
         optimizer_adam.zero_grad()
         loss = model()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
         optimizer_adam.step()
         model.clamp_parameters()
 
         if epoch % 100 == 0 or epoch == adam_epochs - 1:
-            loss_history.append(loss.item())
+            lv = loss.item()
+            loss_history.append(lv)
+            if math.isnan(lv):
+                break
 
     # Stage 2: L-BFGS
     optimizer_lbfgs = torch.optim.LBFGS(
@@ -491,13 +531,17 @@ def train_nll(
             optimizer_lbfgs.zero_grad()
             loss = model()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
             return loss
 
         loss = optimizer_lbfgs.step(closure)
         model.clamp_parameters()
 
         if loss is not None:
-            loss_history.append(loss.item())
+            lv = loss.item()
+            loss_history.append(lv)
+            if math.isnan(lv):
+                break
 
     # Extract results
     final_loss = model().item()
@@ -535,10 +579,14 @@ def train_nll_multi_start(
 
     for i in range(n_starts):
         result = train_nll(match_data, seed=42 + i * 7, **kwargs)
+        if math.isnan(result.final_loss):
+            continue
         if best is None or result.final_loss < best.final_loss:
             best = result
 
-    assert best is not None
+    if best is None:
+        # All starts produced NaN — return last result as fallback
+        best = result
     return best
 
 

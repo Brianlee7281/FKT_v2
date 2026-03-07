@@ -206,12 +206,9 @@ def run_step_1_3_simple(matches: list[dict]) -> dict[str, tuple[float, float]]:
     a_init_map = {}
     for m in matches:
         match_id = m["id"]
-        # Use match-specific goals if available, else league average
-        mu_h = m["_ft_h"] if m["_ft_h"] > 0 else avg_h
-        mu_a = m["_ft_a"] if m["_ft_a"] > 0 else avg_a
-        a_h = math.log(max(mu_h, 0.1) / T_MATCH)
-        a_a = math.log(max(mu_a, 0.1) / T_MATCH)
-        a_init_map[match_id] = (a_h, a_a)
+        # Use league-average for all matches (not match-specific actuals,
+        # which would create circular dependency)
+        a_init_map[match_id] = (a_h_default, a_a_default)
 
     log.info("step_1_3_done", n_matches=len(a_init_map))
     return a_init_map
@@ -233,11 +230,12 @@ def run_step_1_4(
         n_starts=n_starts,
         adam_epochs=1000,
         adam_lr=1e-3,
+        sigma_a=1.0,
     )
 
     params = get_full_params(result)
     log.info("step_1_4_done",
-             best_nll=round(result.final_nll, 4),
+             best_nll=round(result.final_loss, 4),
              b=np.round(params["b"], 4).tolist())
 
     return result
@@ -259,19 +257,29 @@ def run_step_1_5_fold(
     result = run_step_1_4(train_intervals, a_init_train, n_starts=n_starts)
     params = get_full_params(result)
 
-    # Validate: compute model probs for validation matches
+    # Validate: compute model probs using trained MMPP parameters
+    # Expected goals = sum over time bins: exp(a + b[i]) * bin_duration
+    b = params["b"]
+    bin_durations = [15.0, 15.0, 15.0, 15.0, 15.0, 15.0]  # 6 x 15-min bins
+    # Model expected goals per match (same for all since we use league-avg a)
+    a_h_trained = result.a_H.mean()
+    a_a_trained = result.a_A.mean()
+    mu_h_model = sum(math.exp(a_h_trained + b[i]) * bin_durations[i] for i in range(6))
+    mu_a_model = sum(math.exp(a_a_trained + b[i]) * bin_durations[i] for i in range(6))
+
+    log.info("fold_model_mu", mu_h=round(mu_h_model, 3), mu_a=round(mu_a_model, 3))
+
+    # Train-set base rate as naive market proxy (since we don't have real odds)
+    train_total = sum(m["_ft_h"] + m["_ft_a"] for m in train_matches)
+    train_over25_rate = sum(1 for m in train_matches if m["_ft_h"] + m["_ft_a"] > 2.5) / len(train_matches)
+
     model_probs_list = []
     market_probs_list = []
     outcomes_list = []
 
     for m in val_matches:
-        mu_h = m["_ft_h"] if m["_ft_h"] > 0 else 1.3
-        mu_a = m["_ft_a"] if m["_ft_a"] > 0 else 1.1
-
-        # Model prediction: use trained b profile + league-avg a
-        # (simplified: use match actual goals as proxy for model mu)
-        model_ou = poisson_over_under(mu_h, mu_a)
-        market_ou = 0.50  # placeholder when odds not available
+        model_ou = poisson_over_under(mu_h_model, mu_a_model)
+        market_ou = train_over25_rate  # base-rate proxy for market
 
         actual_total = m["_ft_h"] + m["_ft_a"]
         outcome_ou = 1.0 if actual_total > 2.5 else 0.0
@@ -390,11 +398,15 @@ async def run_calibration(config: SystemConfig,
         report = evaluate_go_no_go(folds, full_result)
 
         # Save results
-        save_production_params(full_result, str(output_path))
+        save_production_params(
+            full_result, Q,
+            validation_report=report,
+            output_base=str(output_path),
+        )
 
         # Save report
         report_dict = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now().isoformat(),
             "total_matches": len(all_matches),
             "seasons": list(by_season.keys()),
             "overall_pass": report.overall_pass,

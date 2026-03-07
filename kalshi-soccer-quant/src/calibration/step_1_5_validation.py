@@ -510,7 +510,7 @@ def save_production_params(
     if validation_report is not None:
         report_dict = _report_to_dict(validation_report)
         with open(out_dir / "validation_report.json", "w") as f:
-            json.dump(report_dict, f, indent=2)
+            json.dump(report_dict, f, indent=2, default=_json_default)
 
     # Symlink production → latest
     prod_link = Path(output_base) / "production"
@@ -519,6 +519,17 @@ def save_production_params(
     prod_link.symlink_to(timestamp)
 
     return str(out_dir)
+
+
+def _json_default(obj):
+    """JSON serializer for numpy types."""
+    if isinstance(obj, (np.bool_, np.integer)):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
 def _report_to_dict(report: GoNoGoReport) -> dict[str, Any]:
