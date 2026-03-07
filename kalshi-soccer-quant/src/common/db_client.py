@@ -75,13 +75,16 @@ class DBClient:
             ht_h = _safe_int(parts[0].strip())
             ht_a = _safe_int(parts[1].strip())
 
+        lineups_data = _extract_lineups(match)
+        stats_data = _extract_fixture_stats(match)
+
         await self.execute(
             """
             INSERT INTO historical_matches
                 (match_id, league_id, date, home_team, away_team,
                  ft_score_h, ft_score_a, ht_score_h, ht_score_a,
-                 added_time_1, added_time_2, status, summary, lineups)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                 added_time_1, added_time_2, status, summary, lineups, stats)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
             ON CONFLICT (match_id) DO UPDATE SET
                 ft_score_h = EXCLUDED.ft_score_h,
                 ft_score_a = EXCLUDED.ft_score_a,
@@ -91,7 +94,12 @@ class DBClient:
                 added_time_2 = EXCLUDED.added_time_2,
                 status = EXCLUDED.status,
                 summary = EXCLUDED.summary,
-                lineups = EXCLUDED.lineups,
+                lineups = CASE WHEN EXCLUDED.lineups != '{}'::jsonb
+                               THEN EXCLUDED.lineups
+                               ELSE historical_matches.lineups END,
+                stats = CASE WHEN EXCLUDED.stats != '{}'::jsonb
+                              THEN EXCLUDED.stats
+                              ELSE historical_matches.stats END,
                 collected_at = NOW()
             """,
             match.get("id", match.get("static_id", "")),
@@ -109,7 +117,8 @@ class DBClient:
             0,
             match.get("status", ""),
             json.dumps(match.get("goals", {})),
-            json.dumps({}),
+            json.dumps(lineups_data),
+            json.dumps(stats_data),
         )
 
     async def upsert_match_stats(self, match_id: str, stats: dict) -> None:
@@ -192,6 +201,135 @@ def _safe_int(val: Any) -> int:
         return int(val)
     except (ValueError, TypeError):
         return 0
+
+
+def _extract_lineups(match: dict) -> dict:
+    """Extract lineup data from a Goalserve fixture match dict."""
+    lineups_raw = match.get("lineups", {})
+    if not lineups_raw or not isinstance(lineups_raw, dict):
+        return {}
+
+    result = {}
+    for side, key in [("home", "localteam"), ("away", "visitorteam")]:
+        team_data = lineups_raw.get(key, {})
+        if not team_data or not isinstance(team_data, dict):
+            continue
+        formation = team_data.get("formation", "")
+        players = team_data.get("player", [])
+        if isinstance(players, dict):
+            players = [players]
+        result[side] = {
+            "formation": formation,
+            "players": [
+                {
+                    "name": p.get("name", ""),
+                    "number": p.get("number", ""),
+                    "id": p.get("id", ""),
+                    "booking": p.get("booking", ""),
+                }
+                for p in players
+            ],
+        }
+    return result
+
+
+def _extract_fixture_stats(match: dict) -> dict:
+    """Extract stats from fixture data (goals, cards, substitutions).
+
+    Builds a stats dict from data already present in the fixtures response,
+    without needing the commentaries endpoint.
+    """
+    stats: dict[str, Any] = {}
+
+    # Count goals per team
+    goals = match.get("goals", {})
+    goal_list = goals.get("goal", [])
+    if isinstance(goal_list, dict):
+        goal_list = [goal_list]
+
+    home_goals = sum(1 for g in goal_list if g.get("team") == "localteam")
+    away_goals = sum(1 for g in goal_list if g.get("team") == "visitorteam")
+    stats["home_goals"] = home_goals
+    stats["away_goals"] = away_goals
+    stats["total_goals"] = home_goals + away_goals
+
+    # Extract goal minutes for timing analysis
+    goal_minutes = []
+    for g in goal_list:
+        minute = g.get("minute", "")
+        if minute:
+            try:
+                goal_minutes.append(int(str(minute).replace("+", "").split("'")[0]))
+            except (ValueError, IndexError):
+                pass
+    stats["goal_minutes"] = goal_minutes
+
+    # Extract cards from lineup bookings
+    home_yellow = 0
+    home_red = 0
+    away_yellow = 0
+    away_red = 0
+
+    lineups = match.get("lineups", {})
+    subs = match.get("substitutions", {})
+
+    for side, key, yc, rc in [
+        ("home", "localteam", "home_yellow", "home_red"),
+        ("away", "visitorteam", "away_yellow", "away_red"),
+    ]:
+        # Check starting XI bookings
+        team_lineup = lineups.get(key, {}) if isinstance(lineups, dict) else {}
+        players = team_lineup.get("player", []) if isinstance(team_lineup, dict) else []
+        if isinstance(players, dict):
+            players = [players]
+
+        # Also check substitutes
+        team_subs = subs.get(key, {}) if isinstance(subs, dict) else {}
+        sub_list = team_subs.get("substitution", []) if isinstance(team_subs, dict) else []
+        if isinstance(sub_list, dict):
+            sub_list = [sub_list]
+
+        for p in players:
+            booking = p.get("booking", "")
+            if "RC" in booking or "Red" in booking:
+                if side == "home":
+                    home_red += 1
+                else:
+                    away_red += 1
+            if "YC" in booking or "Yellow" in booking:
+                if side == "home":
+                    home_yellow += 1
+                else:
+                    away_yellow += 1
+
+        for s in sub_list:
+            booking = s.get("player_in_booking", "")
+            if "RC" in booking or "Red" in booking:
+                if side == "home":
+                    home_red += 1
+                else:
+                    away_red += 1
+            if "YC" in booking or "Yellow" in booking:
+                if side == "home":
+                    home_yellow += 1
+                else:
+                    away_yellow += 1
+
+    stats["home_yellow_cards"] = home_yellow
+    stats["away_yellow_cards"] = away_yellow
+    stats["home_red_cards"] = home_red
+    stats["away_red_cards"] = away_red
+    stats["total_cards"] = home_yellow + away_yellow + home_red + away_red
+
+    # Count substitutions
+    for side, key in [("home", "localteam"), ("away", "visitorteam")]:
+        team_subs = subs.get(key, {}) if isinstance(subs, dict) else {}
+        sub_list = team_subs.get("substitution", []) if isinstance(team_subs, dict) else []
+        if isinstance(sub_list, dict):
+            sub_list = [sub_list]
+        stats[f"{side}_subs"] = len(sub_list)
+
+    return stats
 
 
 def _parse_date(val: str) -> date | None:
