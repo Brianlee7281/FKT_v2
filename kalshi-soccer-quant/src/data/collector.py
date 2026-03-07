@@ -193,95 +193,124 @@ class DataCollector:
 
     # ── Stats backfill ──
 
-    async def backfill_stats(self, batch_size: int = 100) -> dict:
-        """Backfill match stats for all matches missing stats data.
+    async def backfill_stats(self) -> dict:
+        """Backfill match stats using commentaries/{league}?date={date} endpoint.
 
-        Queries historical_matches WHERE stats IS NULL, then fetches
-        stats from Goalserve commentaries endpoint for each match.
-
-        Args:
-            batch_size: Number of matches to process per batch
-                        (commits progress between batches).
+        Groups matches by (league_id, date) and fetches all stats for each
+        group in a single API call, then matches responses to DB rows by
+        static_id/match_id.
 
         Returns:
             Summary dict with counts of success/failure/skipped.
         """
-        total_missing = await self.db.fetchval(
-            "SELECT COUNT(*) FROM historical_matches WHERE stats IS NULL"
+        # Use player_stats as the indicator — if NULL or empty, we haven't
+        # fetched rich commentaries data yet (fixture-level stats are already
+        # in the stats column from --backfill)
+        rows = await self.db.fetch(
+            """
+            SELECT DISTINCT league_id, date
+            FROM historical_matches
+            WHERE (player_stats IS NULL OR player_stats = '{}'::jsonb)
+              AND date IS NOT NULL
+            ORDER BY date
+            """
         )
-        log.info("backfill_stats_start", total_missing=total_missing)
+        total_groups = len(rows)
+        log.info("backfill_stats_start", total_groups=total_groups)
 
         success = 0
         failed = 0
         skipped = 0
-        offset = 0
-        pbar = tqdm(total=total_missing, desc="Backfill stats", unit="match")
+        matches_updated = 0
 
-        while True:
-            rows = await self.db.fetch(
-                """
-                SELECT match_id, league_id
-                FROM historical_matches
-                WHERE stats IS NULL
-                ORDER BY date
-                LIMIT $1
-                """,
-                batch_size,
-            )
+        for row in tqdm(rows, desc="Backfill stats", unit="group"):
+            league_id = row["league_id"]
+            match_date = row["date"]
 
-            if not rows:
-                break
+            if not league_id or not match_date:
+                continue
 
-            for row in rows:
-                match_id = row["match_id"]
-                league_id = row["league_id"] or ""
+            date_str = match_date.strftime("%d.%m.%Y")
 
-                try:
-                    stats = await self.goalserve.get_match_stats(
-                        match_id, league_id
-                    )
-                    if stats:
-                        await self.db.upsert_match_stats(match_id, stats)
-                        success += 1
-                    else:
-                        # Mark as attempted so we don't retry indefinitely
-                        await self.db.execute(
-                            """
-                            UPDATE historical_matches
-                            SET stats = '{}'::jsonb, collected_at = NOW()
-                            WHERE match_id = $1
-                            """,
-                            match_id,
-                        )
-                        skipped += 1
-                except Exception as e:
-                    log.warning("backfill_stats_failed",
-                                match_id=match_id, error=str(e))
-                    # Mark with empty so we don't retry on next batch
+            try:
+                data = await self.goalserve.get_commentaries_by_date(
+                    league_id, date_str
+                )
+
+                if not data:
+                    skipped += 1
+                    await asyncio.sleep(RATE_LIMIT_DELAY)
+                    continue
+
+                # Extract matches from response
+                tournament = data.get("commentaries", data).get("tournament", {})
+                api_matches = tournament.get("match", [])
+                if isinstance(api_matches, dict):
+                    api_matches = [api_matches]
+
+                if not api_matches:
+                    skipped += 1
+                    await asyncio.sleep(RATE_LIMIT_DELAY)
+                    continue
+
+                # Get DB matches for this league+date
+                db_matches = await self.db.fetch(
+                    """
+                    SELECT match_id FROM historical_matches
+                    WHERE league_id = $1 AND date = $2
+                      AND (player_stats IS NULL OR player_stats = '{}'::jsonb)
+                    """,
+                    league_id,
+                    match_date,
+                )
+                db_ids = {r["match_id"] for r in db_matches}
+
+                # Match API responses to DB rows by static_id or id
+                for am in api_matches:
+                    static_id = am.get("static_id", "")
+                    match_id_api = am.get("id", "")
+
+                    matched_id = None
+                    if static_id in db_ids:
+                        matched_id = static_id
+                    elif match_id_api in db_ids:
+                        matched_id = match_id_api
+
+                    if not matched_id:
+                        continue
+
+                    # Build stats + player_stats for storage
+                    stats_data = am.get("stats", {})
+                    player_stats = am.get("player_stats", {})
+
                     await self.db.execute(
                         """
                         UPDATE historical_matches
-                        SET stats = '{}'::jsonb, collected_at = NOW()
+                        SET stats = $2::jsonb,
+                            player_stats = $3::jsonb,
+                            collected_at = NOW()
                         WHERE match_id = $1
                         """,
-                        match_id,
+                        matched_id,
+                        json.dumps(stats_data),
+                        json.dumps(player_stats),
                     )
-                    failed += 1
+                    matches_updated += 1
 
-                pbar.update(1)
-                await asyncio.sleep(RATE_LIMIT_DELAY)
+                success += 1
+            except Exception as e:
+                log.warning("backfill_stats_failed",
+                            league_id=league_id, date=date_str, error=str(e))
+                failed += 1
 
-            processed = success + failed + skipped
-            log.info("backfill_stats_progress",
-                     processed=processed, total=total_missing,
-                     success=success, failed=failed, skipped=skipped)
+            await asyncio.sleep(RATE_LIMIT_DELAY)
 
-        pbar.close()
         report = {
-            "total_missing": total_missing,
-            "success": success,
-            "failed": failed,
-            "skipped": skipped,
+            "total_groups": total_groups,
+            "matches_updated": matches_updated,
+            "groups_success": success,
+            "groups_failed": failed,
+            "groups_skipped": skipped,
         }
         log.info("backfill_stats_complete", **report)
         return report

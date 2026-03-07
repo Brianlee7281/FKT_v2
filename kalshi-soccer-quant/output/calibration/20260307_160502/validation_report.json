@@ -1,0 +1,70 @@
+{
+  "overall_pass": false,
+  "calibration_pass": false,
+  "delta_bs_pass": 0,
+  "multi_market_pass": true,
+  "max_drawdown_pass": 0,
+  "all_folds_positive": false,
+  "gamma_signs_pass": true,
+  "delta_lrt_pass": true,
+  "b_half_ratio_pass": true,
+  "delta_lrt": {},
+  "b_validation": {
+    "model_h1_ratio": 0.46544828016833306,
+    "model_h2_ratio": 0.5345517198316669
+  },
+  "sign_validation": {
+    "gamma_H_1_correct": 1,
+    "gamma_H_2_correct": 1,
+    "gamma_A_1_correct": 1,
+    "gamma_A_2_correct": 1,
+    "all_gamma_correct": true
+  },
+  "folds": [
+    {
+      "fold_idx": 0,
+      "brier_score_model": 0.26345479202813665,
+      "brier_score_pinnacle": 0.24903638575318598,
+      "delta_bs": 0.014418406274950668,
+      "log_loss": 0.0,
+      "calibration_max_dev": 0.12068928344823254,
+      "sim_pnl": {
+        "total_pnl": -9781.81063509802,
+        "total_trades": 1140,
+        "final_bankroll": 218.18936490197223,
+        "return_pct": -97.81810635098027,
+        "max_drawdown_pct": 98.1955811056543
+      }
+    },
+    {
+      "fold_idx": 1,
+      "brier_score_model": 0.2614398164144332,
+      "brier_score_pinnacle": 0.2500067542149722,
+      "delta_bs": 0.011433062199460997,
+      "log_loss": 0.0,
+      "calibration_max_dev": 0.10756326708846647,
+      "sim_pnl": {
+        "total_pnl": -8801.121672385803,
+        "total_trades": 1140,
+        "final_bankroll": 1198.8783276142055,
+        "return_pct": -88.01121672385794,
+        "max_drawdown_pct": 93.57514788234708
+      }
+    },
+    {
+      "fold_idx": 2,
+      "brier_score_model": 0.2651490958672027,
+      "brier_score_pinnacle": 0.24930934912637376,
+      "delta_bs": 0.01583974674082894,
+      "log_loss": 0.0,
+      "calibration_max_dev": 0.12593394558335863,
+      "sim_pnl": {
+        "total_pnl": -9730.128917355574,
+        "total_trades": 1257,
+        "final_bankroll": 269.87108264442475,
+        "return_pct": -97.30128917355576,
+        "max_drawdown_pct": 98.25048455858044
+      }
+    }
+  ]
+}

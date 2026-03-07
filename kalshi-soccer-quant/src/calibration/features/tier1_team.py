@@ -62,8 +62,11 @@ def build_team_features(
     saves_vals = []
 
     for s in stats:
-        xg_vals.append(_safe_float(s.get("xg", s.get("xG", 0))))
-        xga_vals.append(_safe_float(s.get("xga", s.get("xGA", 0))))
+        # Goalserve stores xG under "expected_goals.total", not "xg"/"xG"
+        xg_vals.append(_extract_stat(s, "expected_goals", "total"))
+        # xGA: use opponent's expected_goals if available, else goals_prevented
+        xga_val = _extract_stat(s, "goals_prevented", "total")
+        xga_vals.append(xga_val)
 
         shots = _extract_stat(s, "shots", "total")
         shots_vals.append(shots)
@@ -75,7 +78,15 @@ def build_team_features(
         if shots > 0:
             insidebox_ratios.append(insidebox / shots)
 
-        possession_vals.append(_extract_stat(s, "possestiontime", "total"))
+        poss_val = _extract_stat(s, "possestiontime", "total")
+        # Goalserve stores possession as "50%" — strip the %
+        if poss_val == 0.0:
+            raw_poss = s.get("possestiontime", {})
+            if isinstance(raw_poss, dict):
+                raw_str = str(raw_poss.get("total", ""))
+                if raw_str.endswith("%"):
+                    poss_val = _safe_float(raw_str.rstrip("%"))
+        possession_vals.append(poss_val)
 
         passes_acc = _extract_stat(s, "passes", "accurate")
         passes_total = _extract_stat(s, "passes", "total")

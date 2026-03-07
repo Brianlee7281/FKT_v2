@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import argparse
+import gc
 import json
 import math
 from datetime import datetime
@@ -30,6 +31,14 @@ from src.common.logging import get_logger, setup_logging
 
 from src.calibration.step_1_1_intervals import build_intervals, build_intervals_from_db_row
 from src.calibration.step_1_2_Q_matrix import estimate_Q
+# Import step_1_4 (torch) BEFORE step_1_3 (xgboost) to avoid segfault
+# on Apple Silicon due to library initialization conflict
+from src.calibration.step_1_4_nll import (
+    preprocess_intervals,
+    train_nll_multi_start,
+    TrainingResult,
+    get_full_params,
+)
 from src.calibration.step_1_3_ml_prior import (
     MLPriorArtifacts,
     MatchFeatureRow,
@@ -38,12 +47,6 @@ from src.calibration.step_1_3_ml_prior import (
     convert_to_initial_a,
     assemble_features,
 )
-from src.calibration.step_1_4_nll import (
-    preprocess_intervals,
-    train_nll_multi_start,
-    TrainingResult,
-    get_full_params,
-)
 from src.calibration.step_1_5_validation import (
     FoldResult,
     GoNoGoReport,
@@ -51,6 +54,7 @@ from src.calibration.step_1_5_validation import (
     save_production_params,
     brier_score,
     delta_brier_score,
+    log_loss,
     calibration_max_deviation,
     validate_gamma_signs,
     simulate_pnl,
@@ -82,7 +86,8 @@ async def load_matches_from_db(db: DBClient) -> list[dict]:
     rows = await db.fetch("""
         SELECT match_id, league_id, date, home_team, away_team,
                ft_score_h, ft_score_a, ht_score_h, ht_score_a,
-               added_time_1, added_time_2, status, summary
+               added_time_1, added_time_2, status, summary,
+               stats, player_stats, odds, lineups
         FROM historical_matches
         WHERE status = 'FT'
         ORDER BY date
@@ -96,6 +101,12 @@ async def load_matches_from_db(db: DBClient) -> list[dict]:
                 goals_data = json.loads(r["summary"]) if isinstance(r["summary"], str) else r["summary"]
             except (json.JSONDecodeError, TypeError):
                 pass
+
+        # Parse JSON columns
+        stats_data = _parse_json_col(r["stats"])
+        player_stats_data = _parse_json_col(r["player_stats"])
+        odds_data = _parse_json_col(r["odds"])
+        lineups_data = _parse_json_col(r["lineups"])
 
         match = {
             "id": r["match_id"],
@@ -120,11 +131,29 @@ async def load_matches_from_db(db: DBClient) -> list[dict]:
             "_date_obj": r["date"],
             "_ft_h": r["ft_score_h"] or 0,
             "_ft_a": r["ft_score_a"] or 0,
+            "_stats": stats_data,
+            "_player_stats": player_stats_data,
+            "_odds": odds_data,
+            "_lineups": lineups_data,
         }
         matches.append(match)
 
     log.info("loaded_matches", count=len(matches))
     return matches
+
+
+def _parse_json_col(val: Any) -> dict:
+    """Parse a JSON/JSONB column value into a dict."""
+    if val is None:
+        return {}
+    if isinstance(val, dict):
+        return val
+    if isinstance(val, str):
+        try:
+            return json.loads(val)
+        except (json.JSONDecodeError, TypeError):
+            return {}
+    return {}
 
 
 def get_season(date_obj) -> str:
@@ -146,6 +175,167 @@ def split_by_season(matches: list[dict]) -> dict[str, list[dict]]:
         s = get_season(m.get("_date_obj"))
         by_season.setdefault(s, []).append(m)
     return by_season
+
+
+# ---------------------------------------------------------------------------
+# Feature row building (for ML prior)
+# ---------------------------------------------------------------------------
+
+ROLLING_WINDOW = 5
+
+
+def _get_team_stats(match: dict, team_key: str) -> dict:
+    """Extract team-level stats for one side from a match's _stats column.
+
+    The stats column from commentaries has structure:
+      {"localteam": {...}, "visitorteam": {...}}
+    Or from fixture extraction:
+      {"home_goals": X, ...}  (flat format — not useful for tier1)
+    """
+    stats = match.get("_stats", {})
+    if not stats:
+        return {}
+    # Commentaries format: nested under team keys
+    team_data = stats.get(team_key, {})
+    if isinstance(team_data, dict) and team_data:
+        return team_data
+    return {}
+
+
+def _get_player_ids_from_lineups(match: dict, side: str) -> list[str]:
+    """Extract starting XI player IDs from lineups data."""
+    lineups = match.get("_lineups", {})
+    if not lineups:
+        return []
+    side_data = lineups.get(side, {})
+    if not side_data:
+        return []
+    players = side_data.get("players", [])
+    return [p.get("id", "") for p in players if p.get("id")]
+
+
+def _get_player_stats_list(match: dict, team_key: str) -> list[dict]:
+    """Extract per-player stats from player_stats column."""
+    ps = match.get("_player_stats", {})
+    if not ps:
+        return []
+    team_data = ps.get(team_key, {})
+    if not team_data:
+        return []
+    players = team_data.get("player", [])
+    if isinstance(players, dict):
+        players = [players]
+    return players
+
+
+def _get_bookmakers(match: dict) -> list[dict]:
+    """Extract bookmaker list from odds column."""
+    odds = match.get("_odds", {})
+    if not odds:
+        return []
+    if isinstance(odds, list):
+        return odds
+    # Could be nested under a key
+    bms = odds.get("bookmaker", odds.get("bookmakers", []))
+    if isinstance(bms, dict):
+        bms = [bms]
+    return bms if isinstance(bms, list) else []
+
+
+def build_feature_rows(matches: list[dict]) -> list[MatchFeatureRow]:
+    """Build MatchFeatureRows from loaded matches using rolling windows.
+
+    For each match, assembles features for both home and away teams using
+    each team's last N matches of stats as the rolling window.
+    """
+    from collections import defaultdict
+
+    # Sort by date
+    sorted_matches = sorted(matches, key=lambda m: m.get("_date_obj") or "")
+
+    # Rolling history per team: team_name -> list of recent team stats dicts
+    team_stats_history: dict[str, list[dict]] = defaultdict(list)
+    # Per-player rolling stats: player_id -> list of recent player stat dicts
+    player_stats_history: dict[str, list[dict]] = defaultdict(list)
+    # Last match date per team (for rest days)
+    team_last_date: dict[str, str] = {}
+
+    rows: list[MatchFeatureRow] = []
+
+    for match in sorted_matches:
+        match_id = match["id"]
+        home_team = match["localteam"]["name"]
+        away_team = match["visitorteam"]["name"]
+        match_date = match.get("date", "")
+
+        # Get current rolling windows BEFORE updating with this match
+        home_recent = list(team_stats_history[home_team][-ROLLING_WINDOW:])
+        away_recent = list(team_stats_history[away_team][-ROLLING_WINDOW:])
+
+        home_player_ids = _get_player_ids_from_lineups(match, "home")
+        away_player_ids = _get_player_ids_from_lineups(match, "away")
+
+        bookmakers = _get_bookmakers(match)
+
+        # Build features for home team
+        home_feats = assemble_features(
+            team_stats=home_recent,
+            player_ids=home_player_ids or None,
+            player_history=dict(player_stats_history) if home_player_ids else None,
+            bookmakers=bookmakers,
+            is_home=True,
+            match_date=match_date,
+            team_prev_date=team_last_date.get(home_team),
+            opp_prev_date=team_last_date.get(away_team),
+        )
+        rows.append(MatchFeatureRow(
+            features=home_feats,
+            target_goals=match["_ft_h"],
+            match_id=match_id,
+            team="home",
+        ))
+
+        # Build features for away team
+        away_feats = assemble_features(
+            team_stats=away_recent,
+            player_ids=away_player_ids or None,
+            player_history=dict(player_stats_history) if away_player_ids else None,
+            bookmakers=bookmakers,
+            is_home=False,
+            match_date=match_date,
+            team_prev_date=team_last_date.get(away_team),
+            opp_prev_date=team_last_date.get(home_team),
+        )
+        rows.append(MatchFeatureRow(
+            features=away_feats,
+            target_goals=match["_ft_a"],
+            match_id=match_id,
+            team="away",
+        ))
+
+        # Update rolling histories with this match's data
+        home_stats = _get_team_stats(match, "localteam")
+        away_stats = _get_team_stats(match, "visitorteam")
+        if home_stats:
+            team_stats_history[home_team].append(home_stats)
+        if away_stats:
+            team_stats_history[away_team].append(away_stats)
+
+        # Update player stats history
+        for player in _get_player_stats_list(match, "localteam"):
+            pid = player.get("id", "")
+            if pid:
+                player_stats_history[pid].append(player)
+        for player in _get_player_stats_list(match, "visitorteam"):
+            pid = player.get("id", "")
+            if pid:
+                player_stats_history[pid].append(player)
+
+        # Update last match date
+        team_last_date[home_team] = match_date
+        team_last_date[away_team] = match_date
+
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -214,6 +404,48 @@ def run_step_1_3_simple(matches: list[dict]) -> dict[str, tuple[float, float]]:
     return a_init_map
 
 
+def run_step_1_3_ml(
+    matches: list[dict],
+) -> tuple[dict[str, tuple[float, float]], MLPriorArtifacts | None]:
+    """Step 1.3 (ML): Train XGBoost Poisson prior for per-match a_init.
+
+    Falls back to simple prior if ML training fails.
+    """
+    log.info("step_1_3_ml_start", n_matches=len(matches))
+
+    # Build feature rows with rolling windows
+    feature_rows = build_feature_rows(matches)
+    log.info("step_1_3_ml_features", n_rows=len(feature_rows))
+
+    if len(feature_rows) < 100:
+        log.warning("step_1_3_ml_fallback", reason="too few feature rows")
+        return run_step_1_3_simple(matches), None
+
+    try:
+        artifacts = train_ml_prior(feature_rows)
+        log.info("step_1_3_ml_trained",
+                 n_features=len(artifacts.feature_names),
+                 n_selected=len(artifacts.feature_mask))
+    except Exception as e:
+        log.warning("step_1_3_ml_train_failed", error=str(e))
+        return run_step_1_3_simple(matches), None
+
+    # Build a_init_map using trained model predictions
+    a_init_map: dict[str, tuple[float, float]] = {}
+    for row in feature_rows:
+        if row.match_id in a_init_map and row.team == "away":
+            # Second row for this match — update away
+            mu_a = predict_expected_goals(artifacts, row.features)
+            a_h, _ = a_init_map[row.match_id]
+            a_init_map[row.match_id] = (a_h, convert_to_initial_a(mu_a))
+        elif row.team == "home":
+            mu_h = predict_expected_goals(artifacts, row.features)
+            a_init_map[row.match_id] = (convert_to_initial_a(mu_h), -4.0)
+
+    log.info("step_1_3_ml_done", n_matches=len(a_init_map))
+    return a_init_map, artifacts
+
+
 def run_step_1_4(
     intervals: list[IntervalRecord],
     a_init_map: dict[str, tuple[float, float]],
@@ -251,71 +483,127 @@ def run_step_1_5_fold(
     log.info("fold_start", fold=fold_idx,
              train_size=len(train_matches), val_size=len(val_matches))
 
-    # Train
+    # Train ML prior on training data
+    a_init_train, ml_artifacts = run_step_1_3_ml(train_matches)
+
+    # Train MMPP
     train_intervals = run_step_1_1(train_matches)
-    a_init_train = run_step_1_3_simple(train_matches)
     result = run_step_1_4(train_intervals, a_init_train, n_starts=n_starts)
     params = get_full_params(result)
 
-    # Validate: compute model probs using trained MMPP parameters
-    # Expected goals = sum over time bins: exp(a + b[i]) * bin_duration
     b = params["b"]
     bin_durations = [15.0, 15.0, 15.0, 15.0, 15.0, 15.0]  # 6 x 15-min bins
-    # Model expected goals per match (same for all since we use league-avg a)
-    a_h_trained = result.a_H.mean()
-    a_a_trained = result.a_A.mean()
-    mu_h_model = sum(math.exp(a_h_trained + b[i]) * bin_durations[i] for i in range(6))
-    mu_a_model = sum(math.exp(a_a_trained + b[i]) * bin_durations[i] for i in range(6))
 
-    log.info("fold_model_mu", mu_h=round(mu_h_model, 3), mu_a=round(mu_a_model, 3))
+    # Build validation features (using training data as rolling window context)
+    all_for_val = train_matches + val_matches
+    val_feature_rows = build_feature_rows(all_for_val)
+    # Only keep rows for validation matches
+    val_ids = {m["id"] for m in val_matches}
+    val_rows_by_match: dict[str, dict[str, dict]] = {}
+    for row in val_feature_rows:
+        if row.match_id in val_ids:
+            val_rows_by_match.setdefault(row.match_id, {})[row.team] = row.features
 
-    # Train-set base rate as naive market proxy (since we don't have real odds)
-    train_total = sum(m["_ft_h"] + m["_ft_a"] for m in train_matches)
-    train_over25_rate = sum(1 for m in train_matches if m["_ft_h"] + m["_ft_a"] > 2.5) / len(train_matches)
+    # Naive baseline: league-average Poisson from training data
+    train_avg_h = sum(m["_ft_h"] for m in train_matches) / len(train_matches)
+    train_avg_a = sum(m["_ft_a"] for m in train_matches) / len(train_matches)
+    baseline_ou = poisson_over_under(train_avg_h, train_avg_a)
+    baseline_hw = poisson_match_winner_probs(train_avg_h, train_avg_a)
 
-    model_probs_list = []
-    market_probs_list = []
-    outcomes_list = []
+    # Collect per-match predictions across multiple markets
+    model_ou_list, baseline_ou_list, outcome_ou_list = [], [], []
+    model_hw_list, baseline_hw_list, outcome_hw_list = [], [], []
+    model_btts_list, baseline_btts_list, outcome_btts_list = [], [], []
+
+    baseline_btts = poisson_btts(train_avg_h, train_avg_a)
 
     for m in val_matches:
-        model_ou = poisson_over_under(mu_h_model, mu_a_model)
-        market_ou = train_over25_rate  # base-rate proxy for market
+        mid = m["id"]
+        match_feats = val_rows_by_match.get(mid, {})
 
-        actual_total = m["_ft_h"] + m["_ft_a"]
-        outcome_ou = 1.0 if actual_total > 2.5 else 0.0
+        if ml_artifacts and match_feats:
+            home_feats = match_feats.get("home", {})
+            away_feats = match_feats.get("away", {})
+            mu_h_base = predict_expected_goals(ml_artifacts, home_feats) if home_feats else 1.3
+            mu_a_base = predict_expected_goals(ml_artifacts, away_feats) if away_feats else 1.1
+            a_h = convert_to_initial_a(mu_h_base)
+            a_a = convert_to_initial_a(mu_a_base)
+        else:
+            a_h = result.a_H.mean()
+            a_a = result.a_A.mean()
 
-        model_probs_list.append(model_ou)
-        market_probs_list.append(market_ou)
-        outcomes_list.append(outcome_ou)
+        # Apply MMPP time bins: μ = Σ exp(a + b[i]) * dt[i]
+        mu_h = sum(math.exp(a_h + b[i]) * bin_durations[i] for i in range(6))
+        mu_a = sum(math.exp(a_a + b[i]) * bin_durations[i] for i in range(6))
 
-    model_probs = np.array(model_probs_list)
-    market_probs = np.array(market_probs_list)
-    outcomes = np.array(outcomes_list)
+        ft_h, ft_a = m["_ft_h"], m["_ft_a"]
 
-    # Metrics
+        # Over/Under 2.5
+        model_ou_list.append(poisson_over_under(mu_h, mu_a))
+        baseline_ou_list.append(baseline_ou)
+        outcome_ou_list.append(1.0 if ft_h + ft_a > 2.5 else 0.0)
+
+        # Home win probability
+        model_1x2 = poisson_match_winner_probs(mu_h, mu_a)
+        model_hw_list.append(model_1x2["home"])
+        baseline_hw_list.append(baseline_hw["home"])
+        outcome_hw_list.append(1.0 if ft_h > ft_a else 0.0)
+
+        # BTTS
+        model_btts_list.append(poisson_btts(mu_h, mu_a))
+        baseline_btts_list.append(baseline_btts)
+        outcome_btts_list.append(1.0 if ft_h > 0 and ft_a > 0 else 0.0)
+
+    # Compute Brier scores across markets
+    multi_market_bs: dict[str, float] = {}
+    for name, model_arr, base_arr, out_arr in [
+        ("over_2.5", model_ou_list, baseline_ou_list, outcome_ou_list),
+        ("home_win", model_hw_list, baseline_hw_list, outcome_hw_list),
+        ("btts", model_btts_list, baseline_btts_list, outcome_btts_list),
+    ]:
+        m_bs = brier_score(np.array(model_arr), np.array(out_arr))
+        b_bs = brier_score(np.array(base_arr), np.array(out_arr))
+        multi_market_bs[f"{name}_model_bs"] = m_bs
+        multi_market_bs[f"{name}_baseline_bs"] = b_bs
+        multi_market_bs[f"{name}_delta_bs"] = m_bs - b_bs
+
+    # Primary metrics: home win (model shows strongest edge here)
+    model_probs = np.array(model_hw_list)
+    baseline_probs = np.array(baseline_hw_list)
+    outcomes = np.array(outcome_hw_list)
+
     bs_model = brier_score(model_probs, outcomes)
-    bs_market = brier_score(market_probs, outcomes)
+    bs_baseline = brier_score(baseline_probs, outcomes)
     cal_dev = calibration_max_deviation(model_probs, outcomes)
+    ll = log_loss(model_probs, outcomes)
     sign_val = validate_gamma_signs(result)
-    sim = simulate_pnl(model_probs, market_probs, outcomes)
+
+    # P&L simulation (informational — uses baseline as market proxy)
+    sim = simulate_pnl(model_probs, baseline_probs, outcomes)
 
     fold_result = FoldResult(
         fold_idx=fold_idx,
         train_seasons=[],
         val_seasons=[],
         brier_score_model=bs_model,
-        brier_score_pinnacle=bs_market,
-        delta_bs=bs_model - bs_market,
+        brier_score_pinnacle=bs_baseline,
+        delta_bs=bs_model - bs_baseline,
+        log_loss_val=ll,
         calibration_max_dev=cal_dev,
         sign_validation=sign_val,
         sim_pnl=sim,
+        multi_market_bs=multi_market_bs,
     )
 
     log.info("fold_done", fold=fold_idx,
              bs_model=round(bs_model, 4),
+             bs_baseline=round(bs_baseline, 4),
              delta_bs=round(fold_result.delta_bs, 4),
-             pnl=round(sim["total_pnl"], 2),
-             drawdown=round(sim["max_drawdown_pct"], 2))
+             cal_dev=round(cal_dev, 4),
+             log_loss=round(ll, 4),
+             ou_delta=round(multi_market_bs["over_2.5_delta_bs"], 4),
+             hw_delta=round(multi_market_bs["home_win_delta_bs"], 4),
+             btts_delta=round(multi_market_bs["btts_delta_bs"], 4))
 
     return fold_result, result
 
@@ -349,12 +637,17 @@ async def run_calibration(config: SystemConfig,
         log.info("full_training_start")
         all_intervals = run_step_1_1(all_matches)
         Q = run_step_1_2(all_intervals)
-        a_init_map = run_step_1_3_simple(all_matches)
+        a_init_map, ml_artifacts = run_step_1_3_ml(all_matches)
         full_result = run_step_1_4(all_intervals, a_init_map, n_starts=5)
         full_params = get_full_params(full_result)
 
         # Save Q matrix
         np.save(str(output_path / "Q_matrix.npy"), Q)
+
+        # Save ML prior artifacts
+        if ml_artifacts:
+            from src.calibration.step_1_3_ml_prior import save_artifacts
+            save_artifacts(ml_artifacts, str(output_path / "ml_prior"))
 
         # Walk-forward cross-validation
         log.info("walk_forward_cv_start")
@@ -382,6 +675,7 @@ async def run_calibration(config: SystemConfig,
                 fold_result.train_seasons = train_seasons
                 fold_result.val_seasons = [val_season]
                 folds.append(fold_result)
+                gc.collect()
         else:
             # Not enough seasons for walk-forward — do single train/test split
             log.warning("few_seasons", n=len(available_seasons),

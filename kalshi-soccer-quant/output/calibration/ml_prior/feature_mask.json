@@ -1,0 +1,23 @@
+[
+  "team_avg_rating",
+  "pass_accuracy",
+  "mf_avg_rating",
+  "shots_per_90",
+  "possession_avg",
+  "shots_on_target_per_90",
+  "fw_avg_rating",
+  "fw_goals_p90",
+  "fw_key_passes_p90",
+  "df_avg_rating",
+  "xG_per_90",
+  "xGA_per_90",
+  "df_interceptions_p90",
+  "df_tackles_p90",
+  "corners_per_90",
+  "mf_key_passes_p90",
+  "gk_save_rate",
+  "opp_rest_days",
+  "shots_insidebox_ratio",
+  "saves_per_90",
+  "fouls_per_90"
+]

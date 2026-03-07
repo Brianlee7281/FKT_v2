@@ -294,8 +294,12 @@ class MMPPLoss(nn.Module):
 
         # Shared parameters
         self.b = nn.Parameter(torch.zeros(N_TIME_BINS, dtype=torch.float64))
-        self.gamma_H = nn.Parameter(torch.zeros(2, dtype=torch.float64))
-        self.gamma_A = nn.Parameter(torch.zeros(2, dtype=torch.float64))
+        # Initialize gamma slightly off-zero so they aren't stuck on the
+        # clamp boundary.  Signs match football intuition:
+        #   gamma_H = [home_dismissed→home_down, away_dismissed→home_up]
+        #   gamma_A = [home_dismissed→away_up, away_dismissed→away_down]
+        self.gamma_H = nn.Parameter(torch.tensor([-0.05, 0.05], dtype=torch.float64))
+        self.gamma_A = nn.Parameter(torch.tensor([0.05, -0.05], dtype=torch.float64))
         self.delta_H = nn.Parameter(torch.zeros(4, dtype=torch.float64))
         self.delta_A = nn.Parameter(torch.zeros(4, dtype=torch.float64))
 
@@ -420,11 +424,11 @@ class MMPPLoss(nn.Module):
             + torch.sum((self.a_A - self.a_A_init) ** 2)
         )
 
-        # L2 regularization on shared parameters
+        # L2 regularization on shared parameters (exclude gamma — clamp
+        # bounds already constrain them, and with only ~17% red-card matches
+        # the gradient signal is too weak to overcome L2)
         reg_l2 = self.lambda_reg * (
             torch.sum(self.b ** 2)
-            + torch.sum(self.gamma_H ** 2)
-            + torch.sum(self.gamma_A ** 2)
             + torch.sum(self.delta_H ** 2)
             + torch.sum(self.delta_A ** 2)
         )
@@ -575,6 +579,8 @@ def train_nll_multi_start(
     Returns:
         TrainingResult with lowest final loss.
     """
+    import gc
+
     best: TrainingResult | None = None
 
     for i in range(n_starts):
@@ -583,6 +589,7 @@ def train_nll_multi_start(
             continue
         if best is None or result.final_loss < best.final_loss:
             best = result
+        gc.collect()
 
     if best is None:
         # All starts produced NaN — return last result as fallback

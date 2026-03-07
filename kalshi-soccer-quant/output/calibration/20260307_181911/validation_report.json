@@ -1,0 +1,70 @@
+{
+  "overall_pass": false,
+  "calibration_pass": false,
+  "delta_bs_pass": 0,
+  "multi_market_pass": false,
+  "max_drawdown_pass": 0,
+  "all_folds_positive": false,
+  "gamma_signs_pass": true,
+  "delta_lrt_pass": true,
+  "b_half_ratio_pass": true,
+  "delta_lrt": {},
+  "b_validation": {
+    "model_h1_ratio": 0.46197062703608005,
+    "model_h2_ratio": 0.53802937296392
+  },
+  "sign_validation": {
+    "gamma_H_1_correct": 1,
+    "gamma_H_2_correct": 1,
+    "gamma_A_1_correct": 1,
+    "gamma_A_2_correct": 1,
+    "all_gamma_correct": true
+  },
+  "folds": [
+    {
+      "fold_idx": 0,
+      "brier_score_model": 0.2581739955548158,
+      "brier_score_pinnacle": 0.24903997061153713,
+      "delta_bs": 0.009134024943278668,
+      "log_loss": 0.7114409424719592,
+      "calibration_max_dev": 0.8509307190808963,
+      "sim_pnl": {
+        "total_pnl": -5626.73813465038,
+        "total_trades": 1040,
+        "final_bankroll": 4373.261865349635,
+        "return_pct": -56.267381346503655,
+        "max_drawdown_pct": 75.654819841818
+      }
+    },
+    {
+      "fold_idx": 1,
+      "brier_score_model": 0.258536133995124,
+      "brier_score_pinnacle": 0.24999137076781264,
+      "delta_bs": 0.008544763227311347,
+      "log_loss": 0.7129298323838761,
+      "calibration_max_dev": 0.8048693249916402,
+      "sim_pnl": {
+        "total_pnl": -2689.240811126118,
+        "total_trades": 1018,
+        "final_bankroll": 7310.75918887386,
+        "return_pct": -26.8924081112614,
+        "max_drawdown_pct": 53.79330136065457
+      }
+    },
+    {
+      "fold_idx": 2,
+      "brier_score_model": 0.2677824650162529,
+      "brier_score_pinnacle": 0.24932819142713164,
+      "delta_bs": 0.018454273589121273,
+      "log_loss": 0.7326411442177668,
+      "calibration_max_dev": 0.4764240595632163,
+      "sim_pnl": {
+        "total_pnl": -7008.084493022849,
+        "total_trades": 1179,
+        "final_bankroll": 2991.915506977141,
+        "return_pct": -70.0808449302286,
+        "max_drawdown_pct": 86.03827925163245
+      }
+    }
+  ]
+}

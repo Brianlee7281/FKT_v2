@@ -51,6 +51,8 @@ class GoalserveClient:
 
         response = await client.get(url, params=merged_params)
         response.raise_for_status()
+        if not response.content:
+            return {}
         return response.json()
 
     # ── Fixtures / Results API ──
@@ -167,8 +169,10 @@ class GoalserveClient:
         """
         try:
             data = await self._get(f"commentaries/{league_id}", {"date": date})
+            if not data:
+                return None
             return _normalize_at_keys(data)
-        except httpx.HTTPStatusError:
+        except (httpx.HTTPStatusError, ValueError):
             return None
 
     async def get_live_stats(self, league_id: str) -> dict | None:

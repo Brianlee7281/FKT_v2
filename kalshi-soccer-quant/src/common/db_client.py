@@ -242,8 +242,8 @@ def _extract_fixture_stats(match: dict) -> dict:
     stats: dict[str, Any] = {}
 
     # Count goals per team
-    goals = match.get("goals", {})
-    goal_list = goals.get("goal", [])
+    goals = match.get("goals") or {}
+    goal_list = goals.get("goal", []) if isinstance(goals, dict) else []
     if isinstance(goal_list, dict):
         goal_list = [goal_list]
 
