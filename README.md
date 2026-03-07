@@ -148,7 +148,7 @@ where $\bar{P}_{X(t),j}^{(\ell)}$ denotes the time-averaged transition probabili
 
 **Analytic pricing formulas.** Let $G = S_H + S_A$ denote current total goals:
 
-$$P(\text{Over } N.5) = \begin{cases} 1 & \text{if } G > N \\[4pt] 1 - \displaystyle\sum_{k=0}^{N-G} \frac{\mu_{\text{total}}^{\,k} \cdot e^{-\mu_{\text{total}}}}{k!} & \text{if } G \leq N \end{cases}$$
+$$P(\text{Over } N.5) = \begin{cases} 1 & \text{if } G > N \\ 1 - \displaystyle\sum_{k=0}^{N-G} \frac{\mu_{\text{total}}^{\,k} \cdot e^{-\mu_{\text{total}}}}{k!} & \text{if } G \leq N \end{cases}$$
 
 $$P(\text{Home Win}) = \sum_{D=1}^{\infty} e^{-(\mu_H + \mu_A)} \left(\frac{\mu_H}{\mu_A}\right)^{D/2} I_{|D|}(2\sqrt{\mu_H \mu_A})$$
 
