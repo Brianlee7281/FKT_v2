@@ -1,7 +1,9 @@
-"""Entry point: python -m src.scheduler.main → runs MatchScheduler."""
+"""Entry point: python -m src.scheduler → runs MatchScheduler."""
 
 import asyncio
 import signal
+
+import redis.asyncio as aioredis
 
 from src.common.config import SystemConfig
 from src.scheduler.main import MatchScheduler
@@ -9,7 +11,9 @@ from src.scheduler.main import MatchScheduler
 
 def main() -> None:
     config = SystemConfig.load()
-    scheduler = MatchScheduler(config)
+
+    redis_client = aioredis.from_url(config.redis_url) if config.redis_url else None
+    scheduler = MatchScheduler(config, redis_client=redis_client)
 
     loop = asyncio.new_event_loop()
 
@@ -22,6 +26,8 @@ def main() -> None:
     except KeyboardInterrupt:
         loop.run_until_complete(scheduler.stop())
     finally:
+        if redis_client:
+            loop.run_until_complete(redis_client.aclose())
         loop.close()
 
 
