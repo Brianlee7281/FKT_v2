@@ -6,10 +6,13 @@ __pycache__/
 dist/
 build/
 
-# Environment
+# Environment / Secrets
 .env
+.env.*
 secrets.env
-.pem
+*.pem
+config/*.pem
+kalshi_secret_key.pem
 
 # IDE
 .vscode/
