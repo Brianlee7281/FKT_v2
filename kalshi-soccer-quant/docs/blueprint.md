@@ -671,6 +671,30 @@ class DataCollector:
             odds = await goalserve.get_odds(league_id, yesterday)
             for match_odds in odds:
                 await db.upsert_match_odds(match_odds)
+
+    async def backfill_stats(self):
+        """One-time backfill: fetch match stats for all matches WHERE stats IS NULL.
+        Uses commentaries/match endpoint. ~1 req/sec, ~2 hours for 7,000 matches."""
+
+    async def backfill_odds(self):
+        """One-time backfill: fetch pregame odds for all matches WHERE odds IS NULL.
+        Groups by (league_id, date) to minimize API calls. ~1 hour for 7,000 matches."""
+```
+
+### Data Backfill Commands
+
+Before Phase 1 calibration can use the full ML prior (Step 1.3), historical
+matches need stats and odds data populated:
+
+```bash
+# Step 1: Backfill match results (already done if DB has 7,000+ matches)
+python -m src.data.collector --backfill --config config/system.yaml
+
+# Step 2: Backfill match stats (xG, shots, possession, player stats)
+python -m src.data.collector --backfill-stats --config config/system.yaml
+
+# Step 3: Backfill pregame odds (20+ bookmakers per match)
+python -m src.data.collector --backfill-odds --config config/system.yaml
 ```
 
 ---
@@ -1398,8 +1422,11 @@ Goal: pre-match initialization + real-time μ/P_true computation
 ├── src/engine/step_3_2_remaining_mu.py
 ├── src/engine/step_3_4_pricing.py
 ├── src/engine/state_machine.py
+├── src/calibration/step_3_6_backtest.py (In-Play Backtest)
 ├── tests/unit/test_remaining_mu.py, test_mc_core.py
-└── Validation: verify P_true output via historical replay
+├── tests/replay/replay_engine.py, test_replay_engine.py
+└── Validation: Step 3.6 In-Play Backtest Go/No-Go passes (BS, calibration,
+    monotonicity, MC/analytical consistency, directional correctness)
 ```
 
 ### Sprint 4: Phase 3 Event Handling + Phase 4 Execution (2~3 weeks)

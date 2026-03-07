@@ -1,0 +1,198 @@
+{
+  "timestamp": "2026-03-07T03:44:43.670980",
+  "verdict": "NO_GO",
+  "go_no_go": {
+    "verdict": "NO_GO",
+    "n_matches": 50,
+    "min_matches": 10,
+    "n_passed": 4,
+    "n_failed": 3,
+    "criteria": [
+      {
+        "name": "minimum_matches",
+        "threshold": ">= 10",
+        "value": 50,
+        "passed": true,
+        "detail": "50 successful out of 50 total"
+      },
+      {
+        "name": "brier_score_home_win",
+        "threshold": "< 0.2",
+        "value": 0.1628,
+        "passed": true,
+        "detail": "BS(home_win) = 0.1628"
+      },
+      {
+        "name": "brier_decreasing_trend",
+        "threshold": "decreasing across time bins",
+        "value": "home_win: 0-15=0.2492 \u2192 15-30=0.1702 \u2192 30-45=0.2404 \u2192 45-60=0.1660 \u2192 60-75=0.1013 \u2192 75-120=0.1070",
+        "passed": false,
+        "detail": "home_win: 0-15=0.2492 \u2192 15-30=0.1702 \u2192 30-45=0.2404 \u2192 45-60=0.1660 \u2192 60-75=0.1013 \u2192 75-120=0.1070"
+      },
+      {
+        "name": "calibration_max_deviation",
+        "threshold": "<= 7%",
+        "value": 0.2095,
+        "passed": false,
+        "detail": "worst market: btts_yes = 0.2095"
+      },
+      {
+        "name": "monotonicity_violations",
+        "threshold": "< 1%",
+        "value": 0.0,
+        "passed": true,
+        "detail": "0 violations across 0 tick pairs (0.0000)"
+      },
+      {
+        "name": "mc_analytical_divergence",
+        "threshold": "<= 1pp",
+        "value": 0.0,
+        "passed": true,
+        "detail": "max diff = 0.0000, n_compared = 0"
+      },
+      {
+        "name": "directional_correctness",
+        "threshold": "100%",
+        "value": 0.996,
+        "passed": false,
+        "detail": "748/751 correct, 3 failures"
+      }
+    ]
+  },
+  "metrics": {
+    "brier_overall": {
+      "home_win": 0.16275945307675965,
+      "draw": 0.10575774266843417,
+      "away_win": 0.13250844138411688,
+      "over_15": 0.1212041789573553,
+      "over_25": 0.19530417168621153,
+      "over_35": 0.16748599445143345,
+      "over_45": 0.12083461686193685,
+      "over_55": 0.09090366066015494,
+      "btts_yes": 0.20484014642482665
+    },
+    "brier_by_time_bin": {
+      "0-15": {
+        "home_win": 0.24919468846693463,
+        "draw": 0.05997476284694713,
+        "away_win": 0.20846385241892476,
+        "over_15": 0.0434329379012437,
+        "over_25": 0.20218763412107377,
+        "over_35": 0.2951087490847547,
+        "over_45": 0.29554356986452635,
+        "over_55": 0.2381245928743948,
+        "btts_yes": 0.29457160060186494
+      },
+      "15-30": {
+        "home_win": 0.17023500600487593,
+        "draw": 0.07865229732524563,
+        "away_win": 0.1921299317605926,
+        "over_15": 0.12183735025857469,
+        "over_25": 0.25958482932484245,
+        "over_35": 0.32096331818917023,
+        "over_45": 0.2705342686106923,
+        "over_55": 0.15248105222096262,
+        "btts_yes": 0.2925408967524581
+      },
+      "30-45": {
+        "home_win": 0.2403946428232303,
+        "draw": 0.11581646643154148,
+        "away_win": 0.20004640987638886,
+        "over_15": 0.07947124962891777,
+        "over_25": 0.16960062641829357,
+        "over_35": 0.12104233160134094,
+        "over_45": 0.12522830369980206,
+        "over_55": 0.15123116480527415,
+        "btts_yes": 0.17729446364684345
+      },
+      "45-60": {
+        "home_win": 0.16597380042399218,
+        "draw": 0.11982719483809451,
+        "away_win": 0.14670591319832077,
+        "over_15": 0.16625048250014013,
+        "over_25": 0.22559331590582196,
+        "over_35": 0.16579199162905212,
+        "over_45": 0.09196141089615921,
+        "over_55": 0.06534040664311584,
+        "btts_yes": 0.24365867899819202
+      },
+      "60-75": {
+        "home_win": 0.10130207436671093,
+        "draw": 0.09992247434925261,
+        "away_win": 0.05322351049878229,
+        "over_15": 0.012739470927272727,
+        "over_25": 0.09092866306933117,
+        "over_35": 0.10119646406807155,
+        "over_45": 0.07043408630096526,
+        "over_55": 0.055794531708924816,
+        "btts_yes": 0.09058712964545454
+      },
+      "75-120": {
+        "home_win": 0.1069999265995597,
+        "draw": 0.1021471539225757,
+        "away_win": 0.0549208772528486,
+        "over_15": 0.12665702914529237,
+        "over_25": 0.16652711979237825,
+        "over_35": 0.11941154955462123,
+        "over_45": 0.08041911616502885,
+        "over_55": 0.049544696365556355,
+        "btts_yes": 0.11969513389390171
+      }
+    },
+    "n_snapshots": 476,
+    "calibration_error": {
+      "home_win": 0.11057578105315473,
+      "draw": 0.07830142572420473,
+      "away_win": 0.07473783239222345,
+      "over_15": 0.11027015824091477,
+      "over_25": 0.19514467011784323,
+      "over_35": 0.17002797493815927,
+      "over_45": 0.14213271541136605,
+      "over_55": 0.08275434965209426,
+      "btts_yes": 0.20952211223879072
+    },
+    "monotonicity_violations": {
+      "home_win": 0,
+      "draw": 0,
+      "away_win": 0,
+      "over_15": 0,
+      "over_25": 0,
+      "over_35": 0,
+      "over_45": 0,
+      "over_55": 0,
+      "btts_yes": 0
+    },
+    "monotonicity_total_ticks": 0,
+    "mc_analytical_max_diff": {
+      "home_win": 0.0,
+      "draw": 0.0,
+      "away_win": 0.0,
+      "over_15": 0.0,
+      "over_25": 0.0,
+      "over_35": 0.0,
+      "over_45": 0.0,
+      "over_55": 0.0,
+      "btts_yes": 0.0
+    },
+    "mc_analytical_mean_diff": {
+      "home_win": 0.0,
+      "draw": 0.0,
+      "away_win": 0.0,
+      "over_15": 0.0,
+      "over_25": 0.0,
+      "over_35": 0.0,
+      "over_45": 0.0,
+      "over_55": 0.0,
+      "btts_yes": 0.0
+    },
+    "mc_analytical_n_compared": 0,
+    "directional_correct": 748,
+    "directional_total": 751,
+    "simulated_pnl": 0,
+    "simulated_n_trades": 0,
+    "simulated_sharpe": 0.0,
+    "simulated_max_drawdown": 0.0,
+    "n_matches": 50,
+    "n_failed": 0
+  }
+}

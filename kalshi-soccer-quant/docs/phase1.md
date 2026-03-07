@@ -451,6 +451,40 @@ League-specific or pooled. Used in Phase 3 for matrix exponential $e^{Q \cdot \D
 Provide **initial estimates** of baseline intensity that reflect match-level strength difference.
 These values initialize Step 1.4 joint optimization; final a is determined by NLL.
 
+### Data Prerequisite: Stats & Odds Backfill
+
+Step 1.3 requires per-match feature data (team stats, player stats, pregame odds) stored
+in the `historical_matches` table columns: `stats`, `player_stats`, `odds`.
+
+**If these columns are empty, the pipeline falls back to league-average `a_H`/`a_A` for all matches,
+which eliminates team-strength differentiation and prevents the model from beating market baselines.**
+
+Before running the full ML prior, backfill feature data using the data collector:
+
+```bash
+# Backfill match stats (shots, possession, xG, player stats via commentaries endpoint)
+python -m src.data.collector --backfill-stats --config config/system.yaml
+
+# Backfill pregame odds (20+ bookmakers per match)
+python -m src.data.collector --backfill-odds --config config/system.yaml
+```
+
+| Data | Source | DB Column | Estimated Time (7,000 matches) |
+|------|--------|-----------|-------------------------------|
+| Match stats | `commentaries/match?id={id}&league={league}` | `stats`, `player_stats` | ~2 hours (1 req/sec) |
+| Pregame odds | `getodds/soccer?league={id}&date_start={date}` | `odds` | ~1 hour (grouped by league+date) |
+
+**Verify after backfill:**
+```sql
+SELECT
+  COUNT(*) FILTER (WHERE stats IS NOT NULL AND stats != '{}'::jsonb) AS has_stats,
+  COUNT(*) FILTER (WHERE odds IS NOT NULL AND odds != '{}'::jsonb) AS has_odds
+FROM historical_matches;
+```
+
+Coverage targets: **>80%** of matches should have stats, **>70%** should have odds.
+Older matches (pre-2021) may have limited coverage from Goalserve.
+
 ### Feature Architecture — 3-Tier Structure
 
 Build features with three tiers made possible by Goalserve full package:

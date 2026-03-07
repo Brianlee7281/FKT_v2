@@ -1345,3 +1345,287 @@ Real-time updated T.
          [Phase 4: Arbitrage & Execution]
          (order_allowed + P_true + σ_MC + P_bet365)
 ```
+
+---
+
+## Step 3.6: In-Play Backtest — Live Pricing Validation
+
+### Goal
+
+Validate that the Phase 3 live pricing engine produces accurate, calibrated P_true
+values at arbitrary match minutes — not just at kickoff or full time.
+
+Phase 1 optimizes the MMPP parameters (b, gamma, delta, Q) using full-match interval data,
+but never tests the live pricing pipeline that converts those parameters into
+minute-by-minute P_true values. This step closes that gap.
+
+### What This Validates (Gaps Filled)
+
+| Gap | How It Is Tested |
+|-----|-----------------|
+| In-play P_true accuracy at arbitrary minutes | Brier score computed at every snapshot, not just pre-match |
+| Time-decay trajectory | P_true monotonicity checked between events as remaining time shrinks |
+| MC vs analytical agreement | At X=0, dS=0: both paths run, max divergence measured |
+| Stoppage time modeling | T_end shifts applied; compare pricing with fixed T=90 vs dynamic T |
+| State machine correctness under real event sequences | Every historical match exercises goal/red card/halftime/VAR paths |
+| Profitability against recorded market prices | Simulated P&L using recorded P_kalshi from tick_snapshots |
+
+### What This Cannot Validate
+
+| Remaining Gap | Why |
+|--------------|-----|
+| Execution quality (latency, partial fills) | Backtest assumes instant fills; real trading has network delay and queue position |
+| Market impact | Your orders move the Kalshi book; backtest ignores this |
+| Liquidity and spread | Backtest uses recorded VWAP; real depth varies |
+| Data feed reliability | GoalServe WebSocket drops and delayed polls cannot be simulated from historical data |
+| Regime shifts | Model trained on past seasons may not generalize to new leagues or rule changes |
+| Concurrent position risk | Multiple simultaneous matches sharing a bankroll are tested independently |
+
+### Data Sources
+
+**Primary: `historical_matches` table (always available)**
+
+The `summary` JSONB column contains goal events with minutes, team, extra_min,
+and `var_cancelled`. Red cards are in `summary.redcards`. This is sufficient to
+reconstruct a NormalizedEvent sequence for any completed match.
+
+```
+historical_matches.summary -> goals[] -> {minute, extra_min, team, result, var_cancelled}
+historical_matches.summary -> redcards[] -> {minute, team}
+historical_matches -> ht_score_h, ht_score_a (halftime detection)
+historical_matches -> added_time_1, added_time_2 (stoppage time)
+```
+
+**Secondary: `tick_snapshots` + `event_logs` tables (available after live/paper runs)**
+
+Once the system has run on live matches (paper or real), these tables contain
+recorded P_kalshi and P_bet365 at every tick. This enables profitability simulation
+against actual market prices — not just model-vs-outcome validation.
+
+### Architecture
+
+```
+src/calibration/step_3_6_backtest.py
+
+Input:
+  - Production params from data/parameters/production/
+  - historical_matches table (or tick_snapshots for market-price backtest)
+
+Output:
+  - backtest_report.json (metrics + per-match details)
+  - Per-minute calibration curve
+  - Simulated P&L (if market prices available)
+```
+
+### Step 3.6.1: Event Reconstruction
+
+Convert historical match data into ReplayEngine-compatible NormalizedEvent lists.
+
+```python
+def reconstruct_events(match: dict) -> list[NormalizedEvent]:
+    """Build time-ordered event list from historical_matches row.
+
+    Extracts from summary JSONB:
+      - Goals: preliminary (live_odds, t) + confirmed (live_score, t+5s)
+      - Red cards: confirmed (live_score)
+      - Halftime: inferred from ht_score existence, placed at minute 45
+      - Second half start: minute 45
+      - Match finished: minute 90 + added_time_1 + added_time_2
+
+    Returns events sorted by timestamp.
+    """
+```
+
+Key details:
+- Goals produce two events: preliminary at `minute`, confirmed at `minute + 5s`
+- `var_cancelled=True` goals produce a VAR cancellation event instead of confirmation
+- Own goals (`result == "Own Goal"`) invert the scoring team
+- `extra_min` goals: effective minute = `minute + extra_min` (e.g., 90+3 = 93)
+- Red cards produce a single confirmed event
+- Halftime is inferred: if `ht_score_h` and `ht_score_a` exist, insert at minute 45
+- Match end: `T_m = 90 + added_time_1 + added_time_2`
+
+### Step 3.6.2: Replay Execution
+
+For each match, run the ReplayEngine with production parameters and collect snapshots.
+
+```python
+def run_single_match_backtest(
+    match: dict,
+    params: ReplayModelParams,
+    tick_interval: float = 1.0,
+) -> list[Snapshot]:
+    """Replay one match and return snapshots."""
+    events = reconstruct_events(match)
+    engine = ReplayEngine(params)
+    return engine.replay_with_ticks(events, tick_interval=tick_interval)
+```
+
+Two modes:
+- **Event-only** (`replay`): Fast; one snapshot per event. Use for large-scale validation.
+- **Tick-based** (`replay_with_ticks`, 1-min intervals): Tests time-decay trajectory.
+  Use 1-minute ticks (not 1-second) for backtest to keep runtime manageable
+  (~98 snapshots per match vs ~5,880).
+
+### Step 3.6.3: Metrics
+
+#### Metric 1: In-Play Brier Score
+
+At each snapshot where the match outcome is known (post-match),
+compute Brier score for each market.
+
+```
+BS_inplay = (1/N) * sum over all snapshots [ (P_true_market - outcome)^2 ]
+```
+
+Segment by time bin (0-15, 15-30, 30-45, 45-60, 60-75, 75-90+) to detect
+which periods have weak calibration.
+
+Expected behavior: BS should decrease as match progresses
+(more information = more accurate prediction).
+
+#### Metric 2: Calibration Curve (In-Play)
+
+Bin all snapshots by predicted probability (0.0-0.1, 0.1-0.2, ..., 0.9-1.0).
+Within each bin, compute actual outcome frequency.
+Plot reliability diagram.
+
+Threshold: max deviation <= 7% (relaxed from Phase 1's 5% because
+in-play pricing operates under more uncertainty).
+
+#### Metric 3: Monotonicity Check
+
+Between consecutive event-free snapshots (tick-only, no goals/cards),
+verify that P_true moves smoothly in the expected direction:
+- P(home_win) should not jump > 2pp between ticks with no event
+- P(over 2.5) should change monotonically when score is fixed
+
+Violations indicate numerical instability or stoppage-time artifacts.
+
+#### Metric 4: MC vs Analytical Consistency
+
+For snapshots where X=0 and dS=0 (analytical path is used),
+also run MC pricing and compare.
+
+```
+max_divergence = max over snapshots | P_analytical - P_mc |
+```
+
+Threshold: max_divergence <= 1pp for N_MC=50,000.
+
+#### Metric 5: Directional Correctness
+
+After each goal event, verify:
+- Home goal: P(home_win) increases, P(away_win) decreases
+- Away goal: P(away_win) increases, P(home_win) decreases
+- Any goal: P(over 2.5) increases (if total goals <= 3)
+
+After each red card:
+- Team with red card: scoring rate should decrease (mu decreases)
+
+Threshold: 100% directional correctness (any violation is a bug).
+
+#### Metric 6: Simulated P&L (requires tick_snapshots)
+
+If recorded P_kalshi values are available from prior live/paper runs,
+simulate trading decisions at each snapshot:
+
+```
+For each snapshot:
+  edge = P_true - P_kalshi
+  if edge > threshold:
+    record simulated entry
+  apply Phase 4 exit logic at subsequent snapshots
+  settle at match end
+```
+
+Compute: total P&L, Sharpe ratio, max drawdown, edge realization ratio.
+
+### Step 3.6.4: Go/No-Go Criteria
+
+All criteria are evaluated across the full backtest set (minimum 200 matches).
+
+| Criterion | Threshold | Rationale |
+|-----------|-----------|-----------|
+| In-play BS (home_win) | < 0.20 | Reasonable in-play accuracy |
+| In-play BS by time bin | Decreasing trend across bins | More info = better prediction |
+| Calibration max deviation | <= 7% | In-play tolerance |
+| Monotonicity violations | < 1% of tick-only snapshots | Numerical stability |
+| MC vs analytical max divergence | <= 1pp | Pricing consistency |
+| Directional correctness | 100% | Any failure is a bug |
+| Simulated P&L (if available) | > 0 over full period | Edge exists against market |
+| Simulated max drawdown (if available) | < 25% | Risk is bounded |
+
+**GO**: All criteria pass. Phase 3 pricing engine is validated for live use.
+
+**NO-GO**: Any criterion fails. Investigate and fix before proceeding to live trading.
+Common failure modes:
+- BS not decreasing by time bin: b parameter shape may be wrong (revisit Step 1.4)
+- Calibration off: a_H/a_A initialization from Phase 2 may be biased
+- Monotonicity violations: stoppage time jumps or bin-boundary discontinuities
+- MC/analytical divergence: bug in analytical pricing formulas
+- Directional failure: event handler or delta/gamma sign error (critical bug)
+
+### Step 3.6.5: Orchestration
+
+```python
+async def run_phase3_backtest(
+    config: SystemConfig,
+    output_dir: str = "output/backtest_phase3",
+    tick_interval: float = 1.0,
+    max_matches: int | None = None,
+) -> BacktestReport:
+    """Run full Phase 3 in-play backtest.
+
+    1. Load production params from data/parameters/production/
+    2. Load completed matches from historical_matches
+    3. Reconstruct events and replay each match
+    4. Compute all metrics
+    5. Evaluate Go/No-Go
+    6. Save report
+    """
+```
+
+```bash
+# Run backtest
+python -m src.calibration.step_3_6_backtest
+
+# With options
+python -m src.calibration.step_3_6_backtest --config config/system.yaml \
+    --output output/backtest_phase3 \
+    --tick-interval 1.0 \
+    --max-matches 500
+```
+
+Output:
+```
+output/backtest_phase3/
+├── backtest_report.json          # Full metrics + Go/No-Go verdict
+├── per_match_details.json        # Per-match BS, directional checks
+├── calibration_curve.json        # Binned reliability data
+└── time_bin_brier.json           # BS by 15-min time bin
+```
+
+### Integration with Calibration Pipeline
+
+Step 3.6 runs **after** Phase 1 calibration (Step 1.5) and **before** paper trading.
+It uses the same production parameters that Phase 1 produces.
+
+```
+Phase 1 (Steps 1.1-1.5)
+  |
+  v
+Production params saved
+  |
+  v
+Step 3.6: In-Play Backtest    <-- validates live pricing with those params
+  |
+  v
+GO? --> Phase 2 + 3 + 4 paper trading
+NO-GO? --> Revisit Phase 1 or fix Phase 3 engine bugs
+```
+
+This step is re-run whenever:
+- Phase 1 parameters are retrained (CRON 1 recalibration)
+- Phase 3 engine logic changes (event handler, pricing, state machine)
+- New historical data is backfilled

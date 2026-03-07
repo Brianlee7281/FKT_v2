@@ -13,7 +13,7 @@ This roadmap translates those specs into concrete implementation tasks.
 Documents:
 ├── phase1.md    (1,044 lines)  Offline Calibration
 ├── phase2.md    (953 lines)    Pre-Match Initialization
-├── phase3.md    (1,342 lines)  Live Trading Engine
+├── phase3.md    (1,570 lines)  Live Trading Engine
 ├── phase4.md    (1,287 lines)  Arbitrage & Execution
 ├── dashboard_design.md    (911 lines)    Dashboard
 └── blueprint.md (1,481 lines) 24/7 Automation Blueprint
@@ -256,29 +256,40 @@ def parse_odds(bookmakers: List[dict]) -> OddsFeatures: ...
 
 ### Step 0.5: Historical Data Backfill
 
-Build `src/data/collector.py` and run the initial backfill:
+Build `src/data/collector.py` and run the initial backfill in three stages:
 
-```python
-class DataCollector:
-    async def backfill_historical(self, league_id: str, seasons: List[str]):
-        """One-time backfill of 3-5 seasons of historical data."""
-        for season in seasons:
-            fixtures = await self.goalserve.get_fixtures(league_id, season)
-            for match in fixtures:
-                await self.db.upsert_match_result(match)
-                stats = await self.goalserve.get_match_stats(match["id"])
-                if stats:
-                    await self.db.upsert_match_stats(match["id"], stats)
-            await asyncio.sleep(1)  # Respect rate limits
-```
+**Stage 1: Match results** (scores, goals, red cards, stoppage time)
 
 ```bash
-python -m src.data.collector --backfill --leagues 1204,1399 --seasons 2020,2021,2022,2023,2024
+python -m src.data.collector --backfill --leagues 1204,1399,1229,1269,1221 --seasons 2020,2021,2022,2023,2024
 ```
+
+**Stage 2: Match stats** (xG, shots, possession, player ratings — required for Step 1.3 ML prior)
+
+```bash
+python -m src.data.collector --backfill-stats --config config/system.yaml
+```
+
+This fetches stats via the `commentaries/match` endpoint for every match where `stats IS NULL`.
+Rate-limited to 1 req/sec (~2 hours for 7,000 matches).
+
+**Stage 3: Pregame odds** (20+ bookmakers — required for Step 1.3 Tier 3 features and Step 1.5 Pinnacle baseline)
+
+```bash
+python -m src.data.collector --backfill-odds --config config/system.yaml
+```
+
+This fetches odds grouped by (league, date) to minimize API calls (~1 hour for 7,000 matches).
+
+> **IMPORTANT:** Without Stages 2-3, the calibration pipeline falls back to league-average
+> `a_H`/`a_A` for all matches. This eliminates team-strength differentiation and the model
+> cannot beat market baselines. **Always run all three stages before Phase 1.**
 
 **Verification:**
 - `SELECT COUNT(*) FROM historical_matches` → 3,000+ matches
-- Spot-check 5 matches: goals, red cards, addedTime, player_stats all present
+- `SELECT COUNT(*) FILTER (WHERE stats IS NOT NULL AND stats != '{}'::jsonb) FROM historical_matches` → >80% coverage
+- `SELECT COUNT(*) FILTER (WHERE odds IS NOT NULL AND odds != '{}'::jsonb) FROM historical_matches` → >70% coverage
+- Spot-check 5 matches: goals, red cards, addedTime, player_stats, odds all present
 - No NULL `addedTime_period1` fields (or document which leagues lack them)
 
 ---
@@ -660,6 +671,58 @@ class ReplayEngine:
 
 **Verification:** Replay 2022 World Cup Final. P_true changes correctly after all 6 goals.
 
+### Step 3.6: In-Play Backtest
+
+**Reference:** phase3.md → Step 3.6
+
+Build `src/calibration/step_3_6_backtest.py`:
+
+```
+Input:  Production params (from Phase 1) + historical_matches table
+Output: backtest_report.json with Go/No-Go verdict
+```
+
+This step validates the live pricing engine by replaying every historical match
+through the ReplayEngine and scoring P_true against actual outcomes at every minute.
+
+Key components:
+- `reconstruct_events()` — convert `historical_matches.summary` JSONB into NormalizedEvent lists
+- `run_single_match_backtest()` — replay one match with tick-based snapshots
+- Metrics: in-play Brier score (by time bin), calibration curve, monotonicity check,
+  MC/analytical consistency, directional correctness
+- Optional: simulated P&L against recorded P_kalshi (requires prior live/paper runs)
+
+```
+tests/unit/test_backtest.py
+├── test_reconstruct_events_basic_match()
+├── test_reconstruct_events_var_cancelled()
+├── test_reconstruct_events_own_goal_inversion()
+├── test_reconstruct_events_extra_time_minute()
+├── test_brier_score_decreases_by_time_bin()
+├── test_monotonicity_no_event_ticks()
+├── test_directional_correctness_home_goal()
+├── test_directional_correctness_away_goal()
+├── test_mc_analytical_consistency()
+└── test_backtest_report_generated()
+```
+
+**Go/No-Go criteria (all must pass on 200+ matches):**
+
+| Criterion | Threshold |
+|-----------|-----------|
+| In-play BS (home_win) | < 0.20 |
+| BS by time bin | Decreasing trend |
+| Calibration max deviation | <= 7% |
+| Monotonicity violations | < 1% of tick-only snapshots |
+| MC vs analytical divergence | <= 1pp |
+| Directional correctness | 100% |
+
+```bash
+python -m src.calibration.step_3_6_backtest --config config/system.yaml
+```
+
+**Verification:** All Go/No-Go criteria pass. If any fail → fix Phase 3 engine or revisit Phase 1 params before proceeding to paper trading.
+
 ---
 
 ## Phase 4: Execution Layer (Weeks 8–9)
@@ -913,6 +976,7 @@ K_frac up to 0.50. Conditionally enable Rapid Entry.
 4. tests/unit/test_mc_core.py            ← Performance + correctness
 5. tests/unit/test_intervals.py          ← Data foundation
 6. tests/unit/test_nll.py                ← Mathematical core
+7. tests/unit/test_backtest.py           ← Step 3.6 in-play validation
 ```
 
 ```bash
@@ -932,7 +996,7 @@ pytest tests/ -v --tb=short
 | 1–2 | Foundation | Infra + Goalserve client + 3,000+ historical matches in DB |
 | 3–5 | Phase 1 | Trained MMPP parameters (b, γ, δ, Q) passing all validation |
 | 5–6 | Phase 2 | Pre-match pipeline: match_id → model instance |
-| 6–8 | Phase 3 | Live engine: events → P_true every second |
+| 6–8 | Phase 3 | Live engine: events → P_true every second + Step 3.6 in-play backtest |
 | 8–9 | Phase 4 | Execution: signals → paper trades (v2 fixes verified) |
 | 9–12 | Automation | Scheduler + Dashboard + Alerts + systemd |
 | 12–16 | Paper | Full system on real matches, no real money |

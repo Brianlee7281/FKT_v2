@@ -1,0 +1,542 @@
+{
+  "home_win": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.03237814365587574,
+      "mean_outcome": 0.08333333333333333,
+      "count": 72
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.1647563414634146,
+      "mean_outcome": 0.17073170731707318,
+      "count": 82
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.23338899880808794,
+      "mean_outcome": 0.38235294117647056,
+      "count": 34
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.3690398832540308,
+      "mean_outcome": 0.49107142857142855,
+      "count": 112
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.4069438691977767,
+      "mean_outcome": 0.6521739130434783,
+      "count": 23
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5933290909090908,
+      "mean_outcome": 0.9090909090909091,
+      "count": 11
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.6381536231884057,
+      "mean_outcome": 0.855072463768116,
+      "count": 69
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7601800000000001,
+      "mean_outcome": 0.875,
+      "count": 8
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8478545454545454,
+      "mean_outcome": 1.0,
+      "count": 22
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9675306976744186,
+      "mean_outcome": 1.0,
+      "count": 43
+    }
+  ],
+  "draw": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.03657954022988506,
+      "mean_outcome": 0.0,
+      "count": 87
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.16113788596005746,
+      "mean_outcome": 0.07633587786259542,
+      "count": 131
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.22529090713471336,
+      "mean_outcome": 0.15517241379310345,
+      "count": 232
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.33950355243547387,
+      "mean_outcome": 0.2857142857142857,
+      "count": 14
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.4753109991508534,
+      "mean_outcome": 0.4,
+      "count": 5
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5290965426478179,
+      "mean_outcome": 0.0,
+      "count": 2
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8894559222009325,
+      "mean_outcome": 0.0,
+      "count": 2
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9152651563840092,
+      "mean_outcome": 0.0,
+      "count": 3
+    }
+  ],
+  "away_win": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.03050864694313159,
+      "mean_outcome": 0.011904761904761904,
+      "count": 84
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.15897649122807017,
+      "mean_outcome": 0.0,
+      "count": 57
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.23713691497812459,
+      "mean_outcome": 0.125,
+      "count": 24
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.3690398832540308,
+      "mean_outcome": 0.2857142857142857,
+      "count": 112
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.4069438691977766,
+      "mean_outcome": 0.30434782608695654,
+      "count": 23
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5927586666666667,
+      "mean_outcome": 0.6,
+      "count": 15
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.6284908510638297,
+      "mean_outcome": 0.723404255319149,
+      "count": 94
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7633938461538462,
+      "mean_outcome": 0.8461538461538461,
+      "count": 13
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.845851304347826,
+      "mean_outcome": 0.8260869565217391,
+      "count": 23
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9679490322580646,
+      "mean_outcome": 0.967741935483871,
+      "count": 31
+    }
+  ],
+  "over_15": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.045733517544719555,
+      "mean_outcome": 0.16666666666666666,
+      "count": 6
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.13112666666666667,
+      "mean_outcome": 0.3333333333333333,
+      "count": 3
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.38344,
+      "mean_outcome": 1.0,
+      "count": 1
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.48454,
+      "mean_outcome": 1.0,
+      "count": 1
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5812817786687889,
+      "mean_outcome": 0.75,
+      "count": 4
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.6176131994525995,
+      "mean_outcome": 0.7142857142857143,
+      "count": 7
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7544582195192719,
+      "mean_outcome": 0.3076923076923077,
+      "count": 52
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8576407230226181,
+      "mean_outcome": 0.6363636363636364,
+      "count": 22
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9804548753086509,
+      "mean_outcome": 0.9263157894736842,
+      "count": 380
+    }
+  ],
+  "over_25": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.024935815051623372,
+      "mean_outcome": 0.08333333333333333,
+      "count": 12
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.164865,
+      "mean_outcome": 0.25,
+      "count": 4
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.24614,
+      "mean_outcome": 0.5,
+      "count": 4
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.35100807326521904,
+      "mean_outcome": 0.2727272727272727,
+      "count": 11
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.46787592324473454,
+      "mean_outcome": 0.25,
+      "count": 4
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5254099814186604,
+      "mean_outcome": 0.125,
+      "count": 64
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.6386726150514238,
+      "mean_outcome": 0.3684210526315789,
+      "count": 19
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7545845088313212,
+      "mean_outcome": 0.3764705882352941,
+      "count": 85
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.858584116737093,
+      "mean_outcome": 0.6530612244897959,
+      "count": 49
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9782508785279702,
+      "mean_outcome": 0.90625,
+      "count": 224
+    }
+  ],
+  "over_35": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.03250148542632571,
+      "mean_outcome": 0.04,
+      "count": 25
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.1547358980101012,
+      "mean_outcome": 0.15384615384615385,
+      "count": 13
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.28279148707065427,
+      "mean_outcome": 0.031746031746031744,
+      "count": 63
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.3561262139768552,
+      "mean_outcome": 0.13043478260869565,
+      "count": 23
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.45229765436149744,
+      "mean_outcome": 0.5,
+      "count": 12
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5245606628392879,
+      "mean_outcome": 0.16666666666666666,
+      "count": 90
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.661190950516426,
+      "mean_outcome": 0.5833333333333334,
+      "count": 24
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7510310972338168,
+      "mean_outcome": 0.515625,
+      "count": 64
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8593757176777008,
+      "mean_outcome": 0.6521739130434783,
+      "count": 46
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9786312407461976,
+      "mean_outcome": 0.9827586206896551,
+      "count": 116
+    }
+  ],
+  "over_45": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.03220487274303506,
+      "mean_outcome": 0.03773584905660377,
+      "count": 53
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.1440174792944777,
+      "mean_outcome": 0.013157894736842105,
+      "count": 76
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.28085886542526434,
+      "mean_outcome": 0.0,
+      "count": 91
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.3592547459861804,
+      "mean_outcome": 0.045454545454545456,
+      "count": 22
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.4556321169769635,
+      "mean_outcome": 0.37037037037037035,
+      "count": 27
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5403053828047427,
+      "mean_outcome": 0.288135593220339,
+      "count": 59
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.6548421652495177,
+      "mean_outcome": 0.6666666666666666,
+      "count": 27
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7496776171029934,
+      "mean_outcome": 0.62,
+      "count": 50
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8492952571133765,
+      "mean_outcome": 0.8333333333333334,
+      "count": 18
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9870868031301043,
+      "mean_outcome": 1.0,
+      "count": 53
+    }
+  ],
+  "over_55": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.03958108325838339,
+      "mean_outcome": 0.013793103448275862,
+      "count": 145
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.1422642312850327,
+      "mean_outcome": 0.0,
+      "count": 99
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.26717362242870013,
+      "mean_outcome": 0.12280701754385964,
+      "count": 57
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.35313288805648235,
+      "mean_outcome": 0.15151515151515152,
+      "count": 33
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.4487783781819009,
+      "mean_outcome": 0.38235294117647056,
+      "count": 34
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5390193795227491,
+      "mean_outcome": 0.5652173913043478,
+      "count": 46
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.6441642100383773,
+      "mean_outcome": 0.7058823529411765,
+      "count": 17
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.747866565510631,
+      "mean_outcome": 0.6923076923076923,
+      "count": 13
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8476768125888439,
+      "mean_outcome": 1.0,
+      "count": 8
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9903441666666666,
+      "mean_outcome": 1.0,
+      "count": 24
+    }
+  ],
+  "btts_yes": [
+    {
+      "bin_center": 0.05,
+      "mean_pred": 0.047308101298824075,
+      "mean_outcome": 0.0,
+      "count": 12
+    },
+    {
+      "bin_center": 0.15000000000000002,
+      "mean_pred": 0.16565666666666665,
+      "mean_outcome": 0.0,
+      "count": 6
+    },
+    {
+      "bin_center": 0.25,
+      "mean_pred": 0.2431090909090909,
+      "mean_outcome": 0.18181818181818182,
+      "count": 11
+    },
+    {
+      "bin_center": 0.35000000000000003,
+      "mean_pred": 0.3745679568239778,
+      "mean_outcome": 0.36363636363636365,
+      "count": 11
+    },
+    {
+      "bin_center": 0.45,
+      "mean_pred": 0.44809632308411196,
+      "mean_outcome": 0.16666666666666666,
+      "count": 12
+    },
+    {
+      "bin_center": 0.55,
+      "mean_pred": 0.5535609411474465,
+      "mean_outcome": 0.09090909090909091,
+      "count": 55
+    },
+    {
+      "bin_center": 0.6500000000000001,
+      "mean_pred": 0.64565086372973,
+      "mean_outcome": 0.2571428571428571,
+      "count": 35
+    },
+    {
+      "bin_center": 0.75,
+      "mean_pred": 0.7447229497516474,
+      "mean_outcome": 0.4482758620689655,
+      "count": 116
+    },
+    {
+      "bin_center": 0.8500000000000001,
+      "mean_pred": 0.8472912376155952,
+      "mean_outcome": 0.5714285714285714,
+      "count": 49
+    },
+    {
+      "bin_center": 0.95,
+      "mean_pred": 0.9884646153846154,
+      "mean_outcome": 0.9467455621301775,
+      "count": 169
+    }
+  ]
+}
