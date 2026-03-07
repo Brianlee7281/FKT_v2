@@ -10,6 +10,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install poetry
 RUN pip install --no-cache-dir poetry==1.8.3
 
+# Install CPU-only PyTorch first (no CUDA — saves ~2 GB RAM + disk)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
 # Install dependencies (cached layer)
 COPY pyproject.toml poetry.lock* ./
 RUN poetry config virtualenvs.create false && \
