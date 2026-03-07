@@ -1,4 +1,4 @@
-# In-Play Soccer Pricing via Markov-Modulated Poisson Process with Automated Execution
+# Real-Time MMPP(Markov-Modulated Poisson Process) Pricing Engine for Football(Soccer) Prediction Markets
 
 A statistical model for real-time soccer match outcome pricing that exploits structural inefficiencies in prediction markets. The system estimates true outcome probabilities using a Markov-Modulated Poisson Process (MMPP) with regime-switching dynamics, validates edge against the sharpest available bookmaker (Pinnacle), and executes Kelly-optimal positions on Kalshi prediction markets at 1-second frequency.
 
