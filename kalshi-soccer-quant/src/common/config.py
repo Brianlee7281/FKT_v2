@@ -115,6 +115,13 @@ class SystemConfig:
     # Raw config dict
     _raw: dict = field(default_factory=dict, repr=False)
 
+    @staticmethod
+    def _load_secret(value: str) -> str:
+        """If value is a file path, read and return its contents; otherwise return as-is."""
+        if value and os.path.isfile(value):
+            return Path(value).read_text().strip()
+        return value
+
     @classmethod
     def load(cls, config_path: str = "config/system.yaml",
              env_file: str | None = ".env") -> SystemConfig:
@@ -141,7 +148,7 @@ class SystemConfig:
         return cls(
             goalserve_api_key=os.environ.get("GOALSERVE_API_KEY", ""),
             kalshi_api_key=os.environ.get("KALSHI_API_KEY", ""),
-            kalshi_api_secret=os.environ.get("KALSHI_API_SECRET", ""),
+            kalshi_api_secret=cls._load_secret(os.environ.get("KALSHI_API_SECRET", "")),
 
             trading_mode=raw.get("trading_mode", "paper"),
 

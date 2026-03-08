@@ -8,13 +8,15 @@ Reference: phase4.md -> Step 4.1 (Kalshi API)
 
 from __future__ import annotations
 
+import base64
 import hashlib
-import hmac
 import time
 from dataclasses import dataclass
 from typing import Any
 
 import httpx
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, utils
 
 from src.common.logging import get_logger
 
@@ -60,7 +62,7 @@ class KalshiClient:
       - Balance query
       - Order book snapshot (REST fallback)
 
-    Authentication uses Kalshi's HMAC-SHA256 signing scheme.
+    Authentication uses Kalshi's RSA-PSS signing scheme.
     """
 
     def __init__(
@@ -70,7 +72,9 @@ class KalshiClient:
         base_url: str = "https://trading-api.kalshi.com/trade-api/v2",
     ):
         self._api_key = api_key
-        self._api_secret = api_secret
+        self._private_key = serialization.load_pem_private_key(
+            api_secret.encode("utf-8"), password=None
+        )
         self._base_url = base_url.rstrip("/")
         self._client: httpx.AsyncClient | None = None
 
@@ -94,7 +98,7 @@ class KalshiClient:
     def _sign_request(
         self, method: str, path: str, timestamp_ms: int
     ) -> dict[str, str]:
-        """Generate Kalshi HMAC-SHA256 auth headers.
+        """Generate Kalshi RSA-PSS auth headers.
 
         Args:
             method: HTTP method (GET, POST, DELETE).
@@ -105,15 +109,19 @@ class KalshiClient:
             Dict of auth headers.
         """
         message = f"{timestamp_ms}{method}{path}"
-        signature = hmac.new(
-            self._api_secret.encode("utf-8"),
-            message.encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
+        digest = hashlib.sha256(message.encode("utf-8")).digest()
+        signature = self._private_key.sign(
+            digest,
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()),
+                salt_length=padding.PSS.MAX_LENGTH,
+            ),
+            utils.Prehashed(hashes.SHA256()),
+        )
 
         return {
             "KALSHI-ACCESS-KEY": self._api_key,
-            "KALSHI-ACCESS-SIGNATURE": signature,
+            "KALSHI-ACCESS-SIGNATURE": base64.b64encode(signature).decode(),
             "KALSHI-ACCESS-TIMESTAMP": str(timestamp_ms),
             "Content-Type": "application/json",
         }
