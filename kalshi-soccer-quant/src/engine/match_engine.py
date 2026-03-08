@@ -127,6 +127,7 @@ class MatchEngine:
         redis_client=None,
         live_odds_source=None,
         live_score_source=None,
+        odds_api_live_source=None,
     ):
         self.match_id = match_id
         self.config = config
@@ -164,6 +165,7 @@ class MatchEngine:
         self._redis = redis_client
         self._live_odds_source = live_odds_source
         self._live_score_source = live_score_source
+        self._odds_api_live_source = odds_api_live_source
 
         # Timing
         self._last_tick_time: float = 0.0
@@ -264,9 +266,10 @@ class MatchEngine:
     # ------------------------------------------------------------------
 
     async def run_live(self) -> None:
-        """Phase 3+4: Live trading — 3 concurrent coroutines.
+        """Phase 3+4: Live trading — up to 4 concurrent coroutines.
 
-        Sequence: wait_for_kickoff → pre_kickoff_check → 3 coroutines.
+        Sequence: wait_for_kickoff → pre_kickoff_check → coroutines.
+        Coroutines: tick_loop, live_odds (Goalserve), live_score, odds_api.
         Runs until match finishes or emergency shutdown.
         """
         if self.lifecycle != EngineLifecycle.PREMATCH_READY:
@@ -293,13 +296,19 @@ class MatchEngine:
             log.warning("live_odds_source_missing", match_id=self.match_id)
         if self._live_score_source is None:
             log.warning("live_score_source_missing", match_id=self.match_id)
+        if self._odds_api_live_source is None:
+            log.info("odds_api_source_not_configured", match_id=self.match_id)
+
+        coroutines = [
+            self._tick_loop(),
+            self._live_odds_listener(),
+            self._live_score_poller(),
+        ]
+        if self._odds_api_live_source is not None:
+            coroutines.append(self._odds_api_listener())
 
         try:
-            await asyncio.gather(
-                self._tick_loop(),
-                self._live_odds_listener(),
-                self._live_score_poller(),
-            )
+            await asyncio.gather(*coroutines)
         except Exception as e:
             log.error("engine_crash", match_id=self.match_id, error=str(e))
             await self._emergency_shutdown(e)
@@ -414,6 +423,36 @@ class MatchEngine:
             pass
         except Exception as e:
             log.error("live_odds_listener_error", error=str(e))
+
+    # ------------------------------------------------------------------
+    # Coroutine 2b: Odds-API Live Odds Listener
+    # ------------------------------------------------------------------
+
+    async def _odds_api_listener(self) -> None:
+        """Listen to Odds-API WebSocket for faster odds updates (<100ms).
+
+        Runs in parallel with the Goalserve live_odds_listener.
+        Dispatches through the same event handler — events are tagged
+        with source='odds_api' for traceability.
+        """
+        if self._odds_api_live_source is None:
+            return
+
+        try:
+            async for event in self._odds_api_live_source:
+                if self._shutdown_event.is_set():
+                    break
+
+                dispatch_live_odds_event(self.state, event)
+
+                # Reset stable tick counter on odds-related events
+                if event.type in ("odds_spike", "score_change_hint"):
+                    record_unstable_tick(self.state)
+
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            log.error("odds_api_listener_error", error=str(e))
 
     # ------------------------------------------------------------------
     # Coroutine 3: Live Score Poller

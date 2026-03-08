@@ -7,6 +7,27 @@ goalserve:
   live_odds_ws_url: "wss://goalserve.com/liveodds"
   base_url: "http://www.goalserve.com/getfeed"
 
+# Odds-API (faster WebSocket odds source)
+odds_api:
+  base_url: "https://api.odds-api.io/v3"
+  ws_url: "wss://api.odds-api.io/v3/ws"
+  bookmakers:
+    - "Bet365"
+    - "1xbet"
+    # Below require paid plan to select:
+    # - "Marathonbet"
+    # - "Unibet"
+    # - "WilliamHill"
+    # - "SingBet"
+  markets: "ML,Spread,Totals"
+  # League slugs for WebSocket filtering
+  league_slugs:
+    - "england-premier-league"
+    - "spain-la-liga"
+    - "germany-bundesliga"
+    - "italy-serie-a"
+    - "france-ligue-1"
+
 # Kalshi
 kalshi:
   ws_url: "wss://trading-api.kalshi.com/trade-api/ws/v2"

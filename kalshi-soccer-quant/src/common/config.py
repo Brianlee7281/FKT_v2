@@ -58,6 +58,7 @@ class SystemConfig:
 
     # API keys (from env)
     goalserve_api_key: str = ""
+    odds_api_key: str = ""
     kalshi_api_key: str = ""
     kalshi_api_secret: str = ""
 
@@ -68,6 +69,20 @@ class SystemConfig:
     goalserve_base_url: str = "http://www.goalserve.com/getfeed"
     live_score_poll_interval: int = 3
     live_odds_ws_url: str = "wss://goalserve.com/liveodds"
+
+    # Odds-API
+    odds_api_base_url: str = "https://api.odds-api.io/v3"
+    odds_api_ws_url: str = "wss://api.odds-api.io/v3/ws"
+    odds_api_bookmakers: list[str] = field(
+        default_factory=lambda: ["Bet365", "1xbet"]
+    )
+    odds_api_markets: str = "ML,Spread,Totals"
+    odds_api_league_slugs: list[str] = field(
+        default_factory=lambda: [
+            "england-premier-league", "spain-la-liga", "germany-bundesliga",
+            "italy-serie-a", "france-ligue-1",
+        ]
+    )
 
     # Kalshi
     kalshi_ws_url: str = "wss://trading-api.kalshi.com/trade-api/ws/v2"
@@ -137,6 +152,7 @@ class SystemConfig:
             raw = _deep_substitute(raw)
 
         goalserve = raw.get("goalserve", {})
+        odds_api = raw.get("odds_api", {})
         kalshi = raw.get("kalshi", {})
         risk = raw.get("risk", {})
         trading = raw.get("trading", {})
@@ -147,6 +163,7 @@ class SystemConfig:
 
         return cls(
             goalserve_api_key=os.environ.get("GOALSERVE_API_KEY", ""),
+            odds_api_key=os.environ.get("ODDS_API_KEY", ""),
             kalshi_api_key=os.environ.get("KALSHI_API_KEY", ""),
             kalshi_api_secret=cls._load_secret(os.environ.get("KALSHI_API_SECRET", "")),
 
@@ -155,6 +172,15 @@ class SystemConfig:
             goalserve_base_url=goalserve.get("base_url", cls.goalserve_base_url),
             live_score_poll_interval=goalserve.get("live_score_poll_interval", 3),
             live_odds_ws_url=goalserve.get("live_odds_ws_url", cls.live_odds_ws_url),
+
+            odds_api_base_url=odds_api.get("base_url", "https://api.odds-api.io/v3"),
+            odds_api_ws_url=odds_api.get("ws_url", "wss://api.odds-api.io/v3/ws"),
+            odds_api_bookmakers=odds_api.get("bookmakers", ["Bet365", "1xbet"]),
+            odds_api_markets=odds_api.get("markets", "ML,Spread,Totals"),
+            odds_api_league_slugs=odds_api.get("league_slugs", [
+                "england-premier-league", "spain-la-liga", "germany-bundesliga",
+                "italy-serie-a", "france-ligue-1",
+            ]),
 
             kalshi_ws_url=kalshi.get("ws_url", cls.kalshi_ws_url),
             kalshi_rest_url=kalshi.get("rest_url", cls.kalshi_rest_url),

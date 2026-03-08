@@ -25,6 +25,7 @@ from src.engine.match_engine import EngineLifecycle, MatchEngine, ModelParams
 from src.goalserve.client import GoalserveClient
 from src.goalserve.live_odds_source import GoalserveLiveOddsSource
 from src.goalserve.live_score_source import GoalserveLiveScoreSource
+from src.odds_api.live_odds_source import OddsApiLiveOddsSource
 from src.trading.risk_manager import RiskManager
 
 log = get_logger(__name__)
@@ -355,6 +356,16 @@ class MatchScheduler:
                 poll_interval=self.config.live_score_poll_interval,
             )
 
+            # Odds-API live source (optional — faster odds from 265 bookmakers)
+            odds_api_live = None
+            if self.config.odds_api_key:
+                odds_api_live = OddsApiLiveOddsSource(
+                    api_key=self.config.odds_api_key,
+                    ws_url=self.config.odds_api_ws_url,
+                    markets=self.config.odds_api_markets,
+                    league_slugs=self.config.odds_api_league_slugs,
+                )
+
             engine = MatchEngine(
                 match_id=match_id,
                 config=self.config,
@@ -362,6 +373,7 @@ class MatchScheduler:
                 redis_client=self._redis,
                 live_odds_source=live_odds,
                 live_score_source=live_score,
+                odds_api_live_source=odds_api_live,
             )
 
             job.engine = engine

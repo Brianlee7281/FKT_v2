@@ -229,7 +229,10 @@ def handle_live_score_failure(state: EngineState) -> None:
 # ---------------------------------------------------------------------------
 
 def dispatch_live_odds_event(state: EngineState, event: NormalizedEvent) -> None:
-    """Route a Live Odds WebSocket event to the appropriate handler."""
+    """Route a Live Odds WebSocket event to the appropriate handler.
+
+    Handles events from both GoalserveLiveOddsSource and OddsApiLiveOddsSource.
+    """
     if event.type == "goal_detected":
         handle_preliminary_goal(state, event)
     elif event.type == "score_rollback":
@@ -238,8 +241,15 @@ def dispatch_live_odds_event(state: EngineState, event: NormalizedEvent) -> None
         handle_period_change_preliminary(state, event)
     elif event.type == "odds_spike":
         handle_odds_spike(state, event)
+    elif event.type == "score_change_hint":
+        # Odds-API inferred score change from consensus odds collapse.
+        # Treat as ob_freeze trigger (like odds_spike) — NOT a preliminary goal,
+        # because we don't have actual score data from Odds-API.
+        handle_odds_spike(state, event)
     elif event.type == "stoppage_entered":
         pass  # Handled by stoppage manager (Phase 3 later)
+    elif event.type == "match_removed":
+        pass  # Odds-API event deletion — informational only
 
 
 def dispatch_live_score_event(state: EngineState, event: NormalizedEvent) -> None:
