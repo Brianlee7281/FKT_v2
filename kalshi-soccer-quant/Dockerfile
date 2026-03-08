@@ -33,5 +33,8 @@ COPY . .
 # Copy React build from stage 1
 COPY --from=frontend-build /frontend/build /app/src/dashboard/frontend/build
 
+# Prevent PyTorch/XGBoost libomp segfault
+ENV OMP_NUM_THREADS=1
+
 # Default: run the scheduler
 CMD ["python", "-m", "src.scheduler"]

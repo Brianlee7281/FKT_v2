@@ -33,6 +33,25 @@ def _deep_substitute(obj):
     return obj
 
 
+def _resolve_redis_url(redis_cfg: dict) -> str:
+    """Resolve Redis URL, allowing REDIS_HOST env var to override hostname."""
+    url = redis_cfg.get("url", "redis://localhost:6379/0")
+    host = os.environ.get("REDIS_HOST")
+    if host:
+        url = f"redis://{host}:6379/0"
+    return url
+
+
+def _resolve_postgres_url(pg_cfg: dict) -> str:
+    """Resolve Postgres URL, allowing POSTGRES_HOST env var to override hostname."""
+    url = pg_cfg.get("url", "postgresql://kalshi:kalshi_dev@localhost:5432/kalshi")
+    host = os.environ.get("POSTGRES_HOST")
+    password = os.environ.get("DB_PASSWORD", "kalshi_dev")
+    if host:
+        url = f"postgresql://kalshi:{password}@{host}:5432/kalshi"
+    return url
+
+
 @dataclass
 class SystemConfig:
     """Loads config/system.yaml and merges with environment variables."""
@@ -144,8 +163,8 @@ class SystemConfig:
             rapid_entry_enabled=trading.get("rapid_entry_enabled", False),
             bet365_divergence_auto_exit=trading.get("bet365_divergence_auto_exit", False),
 
-            redis_url=redis_cfg.get("url", "redis://localhost:6379/0"),
-            postgres_url=pg_cfg.get("url", "postgresql://kalshi:kalshi_dev@localhost:5432/kalshi"),
+            redis_url=_resolve_redis_url(redis_cfg),
+            postgres_url=_resolve_postgres_url(pg_cfg),
 
             slack_webhook=alerts.get("slack_webhook", ""),
             telegram_bot_token=alerts.get("telegram_bot_token", ""),

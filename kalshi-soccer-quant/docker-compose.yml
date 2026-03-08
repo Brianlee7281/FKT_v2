@@ -37,7 +37,7 @@ services:
       POSTGRES_HOST: postgres
     volumes:
       - ./config:/app/config:ro
-      - ./kalshi_secret_key.pem:/app/kalshi_secret_key.pem:ro
+      - ./config/kalshi_secret_key.pem:/app/kalshi_secret_key.pem:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -56,7 +56,7 @@ services:
       POSTGRES_HOST: postgres
     volumes:
       - ./config:/app/config:ro
-      - ./kalshi_secret_key.pem:/app/kalshi_secret_key.pem:ro
+      - ./config/kalshi_secret_key.pem:/app/kalshi_secret_key.pem:ro
     depends_on:
       redis:
         condition: service_healthy
