@@ -124,6 +124,82 @@ def handle_odds_spike(state: EngineState, event: NormalizedEvent) -> None:
     log.warning("odds_spike_detected", delta=event.delta)
 
 
+def handle_penalty_hint(state: EngineState, event: NormalizedEvent) -> None:
+    """Penalty awarded inferred from 15-25% odds shift — ob_freeze.
+
+    A penalty conversion rate of ~76% means odds shift significantly
+    but not as dramatically as a confirmed goal. We freeze the order
+    book and wait for Goalserve confirmation.
+    """
+    import time as _time
+
+    state.ob_freeze = True
+    state._ob_freeze_start = _time.time()
+    state._ob_stable_ticks = 0
+    log.warning(
+        "penalty_hint_detected",
+        delta=event.delta,
+        team=event.extra.get("favored_team"),
+    )
+
+
+def handle_red_card_hint(state: EngineState, event: NormalizedEvent) -> None:
+    """Red card inferred from 8-15% sustained odds shift — ob_freeze.
+
+    A red card changes the Markov state X, affecting λ for the rest
+    of the match. We freeze and wait for Goalserve to confirm the
+    red card event, which will trigger commit_red_card().
+    """
+    import time as _time
+
+    state.ob_freeze = True
+    state._ob_freeze_start = _time.time()
+    state._ob_stable_ticks = 0
+    log.warning(
+        "red_card_hint_detected",
+        delta=event.delta,
+        team=event.extra.get("team_hint"),
+        sustained_ticks=event.extra.get("sustained_ticks"),
+    )
+
+
+def handle_var_review_hint(state: EngineState, event: NormalizedEvent) -> None:
+    """VAR review inferred from rapid odds oscillation — ob_freeze.
+
+    Multiple direction reversals within a short window indicate high
+    uncertainty (VAR reviewing a goal/penalty/red card). We freeze
+    the order book with extra caution — the outcome is unpredictable.
+    """
+    import time as _time
+
+    state.ob_freeze = True
+    state._ob_freeze_start = _time.time()
+    state._ob_stable_ticks = 0
+    log.warning(
+        "var_review_hint_detected",
+        reversals=event.extra.get("reversal_count"),
+    )
+
+
+def handle_penalty_missed_hint(
+    state: EngineState, event: NormalizedEvent
+) -> None:
+    """Penalty missed/saved inferred from odds bounce-back.
+
+    Odds returned toward pre-penalty levels, indicating the penalty
+    was missed or saved. Release ob_freeze if it was set by a
+    penalty_hint (the situation has resolved without a goal).
+    """
+    # Release freeze — the penalty situation resolved without scoring
+    if state.ob_freeze:
+        state.ob_freeze = False
+        state._ob_stable_ticks = 0
+    log.info(
+        "penalty_missed_hint_detected",
+        recovery_pct=event.extra.get("recovery_pct"),
+    )
+
+
 def handle_period_change_preliminary(
     state: EngineState, event: NormalizedEvent
 ) -> None:
@@ -232,6 +308,14 @@ def dispatch_live_odds_event(state: EngineState, event: NormalizedEvent) -> None
     """Route a Live Odds WebSocket event to the appropriate handler.
 
     Handles events from both GoalserveLiveOddsSource and OddsApiLiveOddsSource.
+
+    Event types from Odds-API classifier:
+      - score_change_hint: consensus collapse >25% (likely goal)
+      - penalty_hint: 15-25% odds shift (penalty awarded)
+      - red_card_hint: 8-15% sustained shift (red card)
+      - var_review_hint: rapid oscillation (VAR review in progress)
+      - penalty_missed_hint: bounce-back after penalty (penalty missed/saved)
+      - odds_spike: significant move, no specific pattern match
     """
     if event.type == "goal_detected":
         handle_preliminary_goal(state, event)
@@ -242,10 +326,18 @@ def dispatch_live_odds_event(state: EngineState, event: NormalizedEvent) -> None
     elif event.type == "odds_spike":
         handle_odds_spike(state, event)
     elif event.type == "score_change_hint":
-        # Odds-API inferred score change from consensus odds collapse.
-        # Treat as ob_freeze trigger (like odds_spike) — NOT a preliminary goal,
+        # Odds-API inferred goal from consensus odds collapse.
+        # Treat as ob_freeze trigger — NOT a preliminary goal,
         # because we don't have actual score data from Odds-API.
         handle_odds_spike(state, event)
+    elif event.type == "penalty_hint":
+        handle_penalty_hint(state, event)
+    elif event.type == "red_card_hint":
+        handle_red_card_hint(state, event)
+    elif event.type == "var_review_hint":
+        handle_var_review_hint(state, event)
+    elif event.type == "penalty_missed_hint":
+        handle_penalty_missed_hint(state, event)
     elif event.type == "stoppage_entered":
         pass  # Handled by stoppage manager (Phase 3 later)
     elif event.type == "match_removed":

@@ -434,9 +434,26 @@ class MatchEngine:
         Runs in parallel with the Goalserve live_odds_listener.
         Dispatches through the same event handler — events are tagged
         with source='odds_api' for traceability.
+
+        Classified event types from Odds-API:
+          - odds_spike: generic significant move
+          - score_change_hint: likely goal (consensus collapse >25%)
+          - penalty_hint: likely penalty awarded (15-25% shift)
+          - red_card_hint: likely red card (8-15% sustained shift)
+          - var_review_hint: VAR review in progress (rapid oscillation)
+          - penalty_missed_hint: penalty missed/saved (bounce-back)
         """
         if self._odds_api_live_source is None:
             return
+
+        # Event types that indicate odds instability (reset stable ticks)
+        UNSTABLE_EVENTS = {
+            "odds_spike",
+            "score_change_hint",
+            "penalty_hint",
+            "red_card_hint",
+            "var_review_hint",
+        }
 
         try:
             async for event in self._odds_api_live_source:
@@ -445,9 +462,13 @@ class MatchEngine:
 
                 dispatch_live_odds_event(self.state, event)
 
-                # Reset stable tick counter on odds-related events
-                if event.type in ("odds_spike", "score_change_hint"):
+                # Reset stable tick counter on instability events
+                if event.type in UNSTABLE_EVENTS:
                     record_unstable_tick(self.state)
+
+                # Bump MC version on events that may change model state
+                if event.type in ("score_change_hint", "red_card_hint"):
+                    self._mc_version += 1
 
         except asyncio.CancelledError:
             pass
