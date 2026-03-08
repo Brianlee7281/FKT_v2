@@ -57,6 +57,9 @@ active_markets:
   - "away_win"
   - "btts"
 
+# Phase 1 calibration parameters directory
+params_dir: "output/calibration/production"
+
 # Monte Carlo
 mc:
   N: 50000

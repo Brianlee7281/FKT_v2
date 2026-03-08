@@ -102,6 +102,9 @@ class SystemConfig:
     target_leagues: list[str] = field(default_factory=lambda: ["1204", "1399"])
     active_markets: list[str] = field(default_factory=lambda: ["over_25", "home_win", "away_win", "btts"])
 
+    # Phase 1 calibration params
+    params_dir: str = "output/calibration/production"
+
     # MC
     mc_N: int = 50000
     mc_executor_workers: int = 4
@@ -175,6 +178,8 @@ class SystemConfig:
 
             mc_N=mc.get("N", 50000),
             mc_executor_workers=mc.get("executor_workers", 4),
+
+            params_dir=raw.get("params_dir", "output/calibration/production"),
 
             fee_rate=raw.get("fee_rate", 0.07),
 

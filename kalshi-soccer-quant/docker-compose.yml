@@ -38,6 +38,7 @@ services:
     volumes:
       - ./config:/app/config:ro
       - ./config/kalshi_secret_key.pem:/app/kalshi_secret_key.pem:ro
+      - ./output/calibration/production:/app/output/calibration/production:ro
     depends_on:
       redis:
         condition: service_healthy

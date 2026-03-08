@@ -24,6 +24,7 @@ import numpy as np
 from src.common.config import SystemConfig
 from src.common.logging import get_logger
 from src.common.types import NormalizedEvent, SanityResult, Signal, TradeLog
+from src.prematch.step_2_5_initialization import load_phase1_params, normalize_Q_off
 from src.engine.event_handler import (
     dispatch_live_odds_event,
     dispatch_live_score_event,
@@ -182,7 +183,7 @@ class MatchEngine:
                            model_params: ModelParams | None = None) -> SanityResult:
         """Phase 2: Pre-match initialization.
 
-        In production, this calls Phase 2 data collection + sanity check.
+        Loads Phase 1 calibrated parameters from disk and populates ModelParams.
         For testability, sanity_result and model_params can be injected directly.
 
         Args:
@@ -199,6 +200,44 @@ class MatchEngine:
 
         if model_params is not None:
             self.model = model_params
+        else:
+            # Load Phase 1 params from disk
+            try:
+                phase1 = load_phase1_params(self.config.params_dir)
+                Q = phase1["Q"]
+                Q_off_norm = normalize_Q_off(Q)
+
+                # Use league-average a as fallback (XGBoost not wired yet)
+                self.model = ModelParams(
+                    a_H=-3.5,
+                    a_A=-3.5,
+                    b=phase1["b"],
+                    gamma_H=phase1["gamma_H"],
+                    gamma_A=phase1["gamma_A"],
+                    delta_H=phase1["delta_H"],
+                    delta_A=phase1["delta_A"],
+                    Q_diag=np.diag(Q).copy(),
+                    Q_off=Q_off_norm,
+                    DELTA_SIGNIFICANT=phase1["delta_significant"],
+                )
+
+                log.info(
+                    "phase1_params_loaded",
+                    match_id=self.match_id,
+                    params_dir=self.config.params_dir,
+                    b=self.model.b.tolist(),
+                    delta_significant=self.model.DELTA_SIGNIFICANT,
+                )
+            except FileNotFoundError:
+                log.error(
+                    "phase1_params_not_found",
+                    match_id=self.match_id,
+                    params_dir=self.config.params_dir,
+                )
+                sanity_result = SanityResult(
+                    verdict="SKIP",
+                    warning=f"Phase 1 params not found at {self.config.params_dir}",
+                )
 
         if sanity_result.verdict in ("GO", "GO_WITH_CAUTION"):
             self.stoppage_mgr = StoppageTimeManager(T_exp=self.model.T_exp)
