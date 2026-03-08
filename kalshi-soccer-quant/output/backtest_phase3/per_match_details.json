@@ -4,449 +4,4499 @@
     "ft_score": "0-0",
     "T_m": 90.0,
     "n_events": 4,
-    "n_snapshots": 5,
+    "n_snapshots": 95,
     "error": null,
-    "brier_home_win": 0.13793789926784855
+    "brier_home_win": 0.10826630724255319
   },
   {
     "match_id": "3351007",
     "ft_score": "0-1",
     "T_m": 90.0,
     "n_events": 6,
-    "n_snapshots": 7,
+    "n_snapshots": 97,
     "error": null,
-    "brier_home_win": 0.05320328969659694
+    "brier_home_win": 0.060510118304166666
   },
   {
     "match_id": "3351006",
     "ft_score": "1-1",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.29924497612687484
-  },
-  {
-    "match_id": "3351010",
-    "ft_score": "2-2",
-    "T_m": 90.0,
-    "n_events": 12,
-    "n_snapshots": 13,
-    "error": null,
-    "brier_home_win": 0.049480770614997706
-  },
-  {
-    "match_id": "3351005",
-    "ft_score": "3-1",
-    "T_m": 90.0,
-    "n_events": 12,
-    "n_snapshots": 13,
-    "error": null,
-    "brier_home_win": 0.3965651049418187
-  },
-  {
-    "match_id": "3351011",
-    "ft_score": "4-0",
-    "T_m": 90.0,
-    "n_events": 12,
-    "n_snapshots": 13,
-    "error": null,
-    "brier_home_win": 0.06676100385371929
+    "brier_home_win": 0.2245628603102041
   },
   {
     "match_id": "3351012",
     "ft_score": "2-1",
     "T_m": 90.0,
     "n_events": 10,
-    "n_snapshots": 11,
+    "n_snapshots": 101,
     "error": null,
-    "brier_home_win": 0.37799116732211024
+    "brier_home_win": 0.3714000951840001
+  },
+  {
+    "match_id": "3351005",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.3318954940470588
+  },
+  {
+    "match_id": "3351011",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.10195233340784315
+  },
+  {
+    "match_id": "3351010",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.05258896216078431
   },
   {
     "match_id": "3351015",
     "ft_score": "4-1",
     "T_m": 90.0,
     "n_events": 14,
-    "n_snapshots": 15,
+    "n_snapshots": 105,
     "error": null,
-    "brier_home_win": 0.4729424065498831
+    "brier_home_win": 0.36322369895
   },
   {
     "match_id": "3351022",
     "ft_score": "2-1",
     "T_m": 90.0,
     "n_events": 10,
-    "n_snapshots": 11,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.7050848231844237
+    "brier_home_win": 0.6279881208408165
   },
   {
     "match_id": "3351024",
     "ft_score": "0-2",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.03579758606365931
-  },
-  {
-    "match_id": "3351023",
-    "ft_score": "0-1",
-    "T_m": 90.0,
-    "n_events": 6,
-    "n_snapshots": 7,
-    "error": null,
-    "brier_home_win": 0.05115042294555475
+    "brier_home_win": 0.06965934255918368
   },
   {
     "match_id": "3351018",
     "ft_score": "0-2",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.03400043516703547
+    "brier_home_win": 0.048360161330612245
+  },
+  {
+    "match_id": "3351023",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.06845407903749999
   },
   {
     "match_id": "3351019",
     "ft_score": "0-1",
     "T_m": 90.0,
     "n_events": 6,
-    "n_snapshots": 7,
+    "n_snapshots": 97,
     "error": null,
-    "brier_home_win": 0.0536654665632636
+    "brier_home_win": 0.06054912212916667
   },
   {
     "match_id": "3351020",
     "ft_score": "2-1",
     "T_m": 90.0,
     "n_events": 10,
-    "n_snapshots": 11,
+    "n_snapshots": 101,
     "error": null,
-    "brier_home_win": 0.10599472499965057
+    "brier_home_win": 0.124107826668
   },
   {
     "match_id": "3351021",
     "ft_score": "2-0",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.13858021555491415
+    "brier_home_win": 0.15183388324489797
   },
   {
     "match_id": "3351017",
     "ft_score": "2-3",
     "T_m": 90.0,
     "n_events": 14,
-    "n_snapshots": 15,
+    "n_snapshots": 105,
     "error": null,
-    "brier_home_win": 0.021961803422725103
+    "brier_home_win": 0.04712621889615384
   },
   {
     "match_id": "3351016",
     "ft_score": "1-0",
     "T_m": 90.0,
     "n_events": 6,
-    "n_snapshots": 7,
+    "n_snapshots": 97,
     "error": null,
-    "brier_home_win": 0.3089746028494355
+    "brier_home_win": 0.27192793434583334
   },
   {
     "match_id": "3351026",
     "ft_score": "0-0",
     "T_m": 90.0,
     "n_events": 4,
-    "n_snapshots": 5,
+    "n_snapshots": 95,
     "error": null,
-    "brier_home_win": 0.13793789926784855
-  },
-  {
-    "match_id": "3402361",
-    "ft_score": "0-0",
-    "T_m": 90.0,
-    "n_events": 4,
-    "n_snapshots": 5,
-    "error": null,
-    "brier_home_win": 0.13793789926784855
-  },
-  {
-    "match_id": "3389236",
-    "ft_score": "0-3",
-    "T_m": 90.0,
-    "n_events": 10,
-    "n_snapshots": 11,
-    "error": null,
-    "brier_home_win": 0.03394637841934053
-  },
-  {
-    "match_id": "3389234",
-    "ft_score": "1-0",
-    "T_m": 90.0,
-    "n_events": 6,
-    "n_snapshots": 7,
-    "error": null,
-    "brier_home_win": 0.17886784417544088
-  },
-  {
-    "match_id": "3389237",
-    "ft_score": "4-3",
-    "T_m": 90.0,
-    "n_events": 18,
-    "n_snapshots": 19,
-    "error": null,
-    "brier_home_win": 0.24880957619405977
-  },
-  {
-    "match_id": "3389244",
-    "ft_score": "0-2",
-    "T_m": 90.0,
-    "n_events": 8,
-    "n_snapshots": 9,
-    "error": null,
-    "brier_home_win": 0.0691747228018443
-  },
-  {
-    "match_id": "3402363",
-    "ft_score": "2-0",
-    "T_m": 90.0,
-    "n_events": 8,
-    "n_snapshots": 9,
-    "error": null,
-    "brier_home_win": 0.23636416754441553
+    "brier_home_win": 0.10816742358723404
   },
   {
     "match_id": "3402362",
     "ft_score": "0-2",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.0386540436383485
+    "brier_home_win": 0.050772259004081645
+  },
+  {
+    "match_id": "3402361",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10806976672765956
+  },
+  {
+    "match_id": "3402363",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.22096503350204083
+  },
+  {
+    "match_id": "3389244",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08935247199183673
+  },
+  {
+    "match_id": "3389234",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.1740434130625
   },
   {
     "match_id": "3351032",
     "ft_score": "3-1",
     "T_m": 90.0,
     "n_events": 12,
-    "n_snapshots": 13,
+    "n_snapshots": 103,
     "error": null,
-    "brier_home_win": 0.09292978300327609
+    "brier_home_win": 0.14462164486666668
+  },
+  {
+    "match_id": "3389236",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.04485568307599999
+  },
+  {
+    "match_id": "3389237",
+    "ft_score": "4-3",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.32630271837407415
   },
   {
     "match_id": "3351031",
     "ft_score": "2-0",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.22057146813707662
-  },
-  {
-    "match_id": "3389242",
-    "ft_score": "0-3",
-    "T_m": 90.0,
-    "n_events": 10,
-    "n_snapshots": 11,
-    "error": null,
-    "brier_home_win": 0.055584652681475444
-  },
-  {
-    "match_id": "3389240",
-    "ft_score": "0-1",
-    "T_m": 90.0,
-    "n_events": 6,
-    "n_snapshots": 7,
-    "error": null,
-    "brier_home_win": 0.09572901898337521
-  },
-  {
-    "match_id": "3402358",
-    "ft_score": "0-1",
-    "T_m": 90.0,
-    "n_events": 6,
-    "n_snapshots": 7,
-    "error": null,
-    "brier_home_win": 0.09225791951700846
-  },
-  {
-    "match_id": "3402366",
-    "ft_score": "1-1",
-    "T_m": 90.0,
-    "n_events": 8,
-    "n_snapshots": 9,
-    "error": null,
-    "brier_home_win": 0.2978275531414542
-  },
-  {
-    "match_id": "3402367",
-    "ft_score": "1-1",
-    "T_m": 90.0,
-    "n_events": 8,
-    "n_snapshots": 9,
-    "error": null,
-    "brier_home_win": 0.05597680534523584
-  },
-  {
-    "match_id": "3402365",
-    "ft_score": "4-2",
-    "T_m": 90.0,
-    "n_events": 16,
-    "n_snapshots": 17,
-    "error": null,
-    "brier_home_win": 0.3615045169475387
-  },
-  {
-    "match_id": "3351028",
-    "ft_score": "1-0",
-    "T_m": 90.0,
-    "n_events": 6,
-    "n_snapshots": 7,
-    "error": null,
-    "brier_home_win": 0.3473277186758825
-  },
-  {
-    "match_id": "3351027",
-    "ft_score": "1-0",
-    "T_m": 90.0,
-    "n_events": 6,
-    "n_snapshots": 7,
-    "error": null,
-    "brier_home_win": 0.30954027395652073
-  },
-  {
-    "match_id": "3351025",
-    "ft_score": "0-2",
-    "T_m": 90.0,
-    "n_events": 8,
-    "n_snapshots": 9,
-    "error": null,
-    "brier_home_win": 0.03606384669446007
+    "brier_home_win": 0.26612708111836736
   },
   {
     "match_id": "3351029",
     "ft_score": "2-3",
     "T_m": 90.0,
     "n_events": 14,
-    "n_snapshots": 15,
+    "n_snapshots": 103,
     "error": null,
-    "brier_home_win": 0.09515980747840388
+    "brier_home_win": 0.09691997872941174
   },
   {
     "match_id": "3351030",
     "ft_score": "2-4",
     "T_m": 90.0,
     "n_events": 16,
-    "n_snapshots": 17,
+    "n_snapshots": 105,
     "error": null,
-    "brier_home_win": 0.05621400620495477
+    "brier_home_win": 0.0692760126923077
   },
   {
     "match_id": "3351033",
     "ft_score": "2-1",
     "T_m": 90.0,
     "n_events": 10,
-    "n_snapshots": 11,
+    "n_snapshots": 101,
     "error": null,
-    "brier_home_win": 0.21489448091838592
+    "brier_home_win": 0.18289677197200002
+  },
+  {
+    "match_id": "3351025",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.07633751504583332
   },
   {
     "match_id": "3351034",
     "ft_score": "0-1",
     "T_m": 90.0,
     "n_events": 6,
-    "n_snapshots": 7,
+    "n_snapshots": 97,
     "error": null,
-    "brier_home_win": 0.051425146202278615
+    "brier_home_win": 0.06743379254166666
   },
   {
-    "match_id": "3389246",
-    "ft_score": "0-2",
+    "match_id": "3351028",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.45461402284583335
+  },
+  {
+    "match_id": "3351027",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.26519937675416666
+  },
+  {
+    "match_id": "3389242",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.08759609260800001
+  },
+  {
+    "match_id": "3389240",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.09016272860833334
+  },
+  {
+    "match_id": "3402366",
+    "ft_score": "1-1",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.04041462030595775
+    "brier_home_win": 0.16766837976734694
+  },
+  {
+    "match_id": "3402358",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10812251587659574
+  },
+  {
+    "match_id": "3402367",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08182489982857143
+  },
+  {
+    "match_id": "3402365",
+    "ft_score": "4-2",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.3777120579538462
   },
   {
     "match_id": "3389245",
     "ft_score": "1-3",
     "T_m": 90.0,
     "n_events": 12,
-    "n_snapshots": 13,
+    "n_snapshots": 103,
     "error": null,
-    "brier_home_win": 0.048612948984089854
+    "brier_home_win": 0.06170058594117648
+  },
+  {
+    "match_id": "3389246",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.022551365167346942
   },
   {
     "match_id": "3351013",
     "ft_score": "2-1",
     "T_m": 90.0,
     "n_events": 10,
-    "n_snapshots": 11,
+    "n_snapshots": 101,
     "error": null,
-    "brier_home_win": 0.1136221463797538
+    "brier_home_win": 0.19315580528
   },
   {
     "match_id": "3351014",
     "ft_score": "1-0",
     "T_m": 90.0,
     "n_events": 6,
-    "n_snapshots": 7,
+    "n_snapshots": 95,
     "error": null,
-    "brier_home_win": 0.41656723139583346
+    "brier_home_win": 0.4852181955787234
   },
   {
     "match_id": "3351009",
     "ft_score": "0-2",
     "T_m": 90.0,
     "n_events": 8,
-    "n_snapshots": 9,
+    "n_snapshots": 99,
     "error": null,
-    "brier_home_win": 0.03970414377777788
+    "brier_home_win": 0.04818583951020408
   },
   {
     "match_id": "3379684",
     "ft_score": "8-0",
     "T_m": 90.0,
     "n_events": 20,
-    "n_snapshots": 21,
+    "n_snapshots": 111,
     "error": null,
-    "brier_home_win": 0.03961139261952248
+    "brier_home_win": 0.06443225974181818
   },
   {
     "match_id": "3351036",
     "ft_score": "0-0",
     "T_m": 90.0,
     "n_events": 4,
-    "n_snapshots": 5,
+    "n_snapshots": 95,
     "error": null,
-    "brier_home_win": 0.13793789926784855
+    "brier_home_win": 0.10812806628085106
   },
   {
-    "match_id": "3389250",
-    "ft_score": "5-2",
+    "match_id": "3402370",
+    "ft_score": "2-1",
     "T_m": 90.0,
-    "n_events": 18,
-    "n_snapshots": 19,
+    "n_events": 10,
+    "n_snapshots": 101,
     "error": null,
-    "brier_home_win": 0.24206938923385538
-  },
-  {
-    "match_id": "3389251",
-    "ft_score": "4-3",
-    "T_m": 90.0,
-    "n_events": 18,
-    "n_snapshots": 19,
-    "error": null,
-    "brier_home_win": 0.13119565344535192
+    "brier_home_win": 0.20776102495600005
   },
   {
     "match_id": "3389253",
     "ft_score": "1-3",
     "T_m": 90.0,
     "n_events": 12,
-    "n_snapshots": 13,
+    "n_snapshots": 103,
     "error": null,
-    "brier_home_win": 0.026491692450241203
+    "brier_home_win": 0.046759875219607845
+  },
+  {
+    "match_id": "3389251",
+    "ft_score": "4-3",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.1520789104925926
+  },
+  {
+    "match_id": "3389247",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.381361310908
+  },
+  {
+    "match_id": "3351037",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.22371268626122454
+  },
+  {
+    "match_id": "3351041",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.6296553603346939
+  },
+  {
+    "match_id": "3405231",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.48430535524680857
+  },
+  {
+    "match_id": "3379690",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.07125984073725491
+  },
+  {
+    "match_id": "3379689",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.07264167298823529
+  },
+  {
+    "match_id": "3379691",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.06644040141153845
+  },
+  {
+    "match_id": "3379685",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.180554906808
+  },
+  {
+    "match_id": "3402377",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.37267490121200003
+  },
+  {
+    "match_id": "3389250",
+    "ft_score": "5-2",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.26944230658518514
+  },
+  {
+    "match_id": "3405223",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.3717185464708333
+  },
+  {
+    "match_id": "3402371",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.2626868348375
+  },
+  {
+    "match_id": "3379688",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09686209807755103
+  },
+  {
+    "match_id": "3379692",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.03326518619230769
+  },
+  {
+    "match_id": "3351035",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08188426666122448
+  },
+  {
+    "match_id": "3389249",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0818683025632653
+  },
+  {
+    "match_id": "3389255",
+    "ft_score": "2-5",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.11410895905925925
+  },
+  {
+    "match_id": "3389254",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.023307080028
+  },
+  {
+    "match_id": "3379687",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10796573841702131
+  },
+  {
+    "match_id": "3351038",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.12508098473333332
+  },
+  {
+    "match_id": "3351039",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.404233775448
+  },
+  {
+    "match_id": "3351043",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.043701812490196064
+  },
+  {
+    "match_id": "3351044",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.38619810496666673
+  },
+  {
+    "match_id": "3402373",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.05092175536734694
+  },
+  {
+    "match_id": "3402369",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09193723019591837
+  },
+  {
+    "match_id": "3402375",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10813926006808511
+  },
+  {
+    "match_id": "3405224",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.08385697645
+  },
+  {
+    "match_id": "3405229",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10210428598367348
+  },
+  {
+    "match_id": "3405225",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.165744746148
+  },
+  {
+    "match_id": "3389252",
+    "ft_score": "4-2",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.5535431032867925
+  },
+  {
+    "match_id": "3351042",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.065722282668
+  },
+  {
+    "match_id": "3379686",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.10971640019607838
+  },
+  {
+    "match_id": "3351040",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.19758133349230766
+  },
+  {
+    "match_id": "3402372",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.354269041772
+  },
+  {
+    "match_id": "3405228",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0948357013755102
+  },
+  {
+    "match_id": "3389248",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.29255137398333336
+  },
+  {
+    "match_id": "3389256",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.04596229052
+  },
+  {
+    "match_id": "3405227",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.18075154164081633
+  },
+  {
+    "match_id": "3379697",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.05384961948627451
+  },
+  {
+    "match_id": "3351045",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.614829162710204
+  },
+  {
+    "match_id": "3405240",
+    "ft_score": "2-4",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.06294510675471698
+  },
+  {
+    "match_id": "3405233",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.04667432389795918
+  },
+  {
+    "match_id": "3405238",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.2911877403730769
+  },
+  {
+    "match_id": "3405235",
+    "ft_score": "4-3",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.7063041948703703
+  },
+  {
+    "match_id": "3389260",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.06479010380799999
+  },
+  {
+    "match_id": "3389257",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.40895861416
+  },
+  {
+    "match_id": "3389258",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.04837950343333333
+  },
+  {
+    "match_id": "3379699",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.14577711579999997
+  },
+  {
+    "match_id": "3379701",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.3715327874499999
+  },
+  {
+    "match_id": "3379700",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1945237771877551
+  },
+  {
+    "match_id": "3379698",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.049451744128
+  },
+  {
+    "match_id": "3351050",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10226483892916666
+  },
+  {
+    "match_id": "3351054",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.063715157104
+  },
+  {
+    "match_id": "3402381",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.45917370489615383
+  },
+  {
+    "match_id": "3402378",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10841763236170213
+  },
+  {
+    "match_id": "3402387",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08837017085714287
+  },
+  {
+    "match_id": "3389269",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.6326546856307692
+  },
+  {
+    "match_id": "3402385",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.17895524582040817
+  },
+  {
+    "match_id": "3379694",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10422698291428573
+  },
+  {
+    "match_id": "3379693",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.21588133635102041
+  },
+  {
+    "match_id": "3379696",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.15798037319591834
+  },
+  {
+    "match_id": "3379695",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.15616192429411765
+  },
+  {
+    "match_id": "3402380",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.09269408774901962
+  },
+  {
+    "match_id": "3402384",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.11233686043529414
+  },
+  {
+    "match_id": "3402382",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.09606195831599999
+  },
+  {
+    "match_id": "3402383",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.15789908859599996
+  },
+  {
+    "match_id": "3351048",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.5343717048500001
+  },
+  {
+    "match_id": "3351046",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.3832466425568626
+  },
+  {
+    "match_id": "3351053",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.15332780144615382
+  },
+  {
+    "match_id": "3351051",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.04947240769387754
+  },
+  {
+    "match_id": "3351052",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0686068951510204
+  },
+  {
+    "match_id": "3389267",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.38161968970416665
+  },
+  {
+    "match_id": "3389271",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.16523869383200002
+  },
+  {
+    "match_id": "3405237",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.20485857921960782
+  },
+  {
+    "match_id": "3405239",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.08163903423076925
+  },
+  {
+    "match_id": "3405236",
+    "ft_score": "6-0",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.12247873664905659
+  },
+  {
+    "match_id": "3402379",
+    "ft_score": "6-1",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.1234081263962264
+  },
+  {
+    "match_id": "3402386",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08498429860816324
+  },
+  {
+    "match_id": "3351047",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.1081457926680851
+  },
+  {
+    "match_id": "3405241",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.27204251180833333
+  },
+  {
+    "match_id": "3405234",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07848345195510203
+  },
+  {
+    "match_id": "3389265",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10599584275
+  },
+  {
+    "match_id": "3389264",
+    "ft_score": "2-5",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.12590847972592592
+  },
+  {
+    "match_id": "3351049",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.16356570967346937
+  },
+  {
+    "match_id": "3389262",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.026786756744
+  },
+  {
+    "match_id": "3405232",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.1104918851372549
+  },
+  {
+    "match_id": "3389263",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.2191889278470589
+  },
+  {
+    "match_id": "3402391",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.11287116126800001
+  },
+  {
+    "match_id": "3402395",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10397557025833333
+  },
+  {
+    "match_id": "3402393",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10823719970212763
+  },
+  {
+    "match_id": "3402390",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.07238159770833334
+  },
+  {
+    "match_id": "3402394",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.300358855025
+  },
+  {
+    "match_id": "3405230",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.06572025096666667
+  },
+  {
+    "match_id": "3405226",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.03645768747307692
+  },
+  {
+    "match_id": "3405222",
+    "ft_score": "2-5",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.026363405607407412
+  },
+  {
+    "match_id": "3402397",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.19554137232941174
+  },
+  {
+    "match_id": "3402388",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.31337727516249997
+  },
+  {
+    "match_id": "3402389",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07323686587755102
+  },
+  {
+    "match_id": "3402396",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.4849848783914894
+  },
+  {
+    "match_id": "3379707",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.13607303458823528
+  },
+  {
+    "match_id": "3405244",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.078127430768
+  },
+  {
+    "match_id": "3351062",
+    "ft_score": "6-1",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.09916687572592593
+  },
+  {
+    "match_id": "3402399",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10825202623829784
+  },
+  {
+    "match_id": "3389281",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07024355319999999
+  },
+  {
+    "match_id": "3405250",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.2081056210549019
+  },
+  {
+    "match_id": "3405251",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.09036331927083334
+  },
+  {
+    "match_id": "3351055",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.17290631838367346
+  },
+  {
+    "match_id": "3351063",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.23325221124399997
+  },
+  {
+    "match_id": "3402406",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.099388172052
+  },
+  {
+    "match_id": "3402404",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.18915528782400004
+  },
+  {
+    "match_id": "3379710",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.05099175015918368
+  },
+  {
+    "match_id": "3379706",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.40888209573599993
+  },
+  {
+    "match_id": "3379709",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.19634638117500003
+  },
+  {
+    "match_id": "3379704",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.2544270487803922
+  },
+  {
+    "match_id": "3389287",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.18980752743529414
+  },
+  {
+    "match_id": "3389279",
+    "ft_score": "4-2",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.17213484236538462
+  },
+  {
+    "match_id": "3379703",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.16433228363600003
+  },
+  {
+    "match_id": "3389277",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.2290418485607843
+  },
+  {
+    "match_id": "3379708",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.03355643668235294
+  },
+  {
+    "match_id": "3402407",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10819120477021277
+  },
+  {
+    "match_id": "3402405",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.05704334723673469
+  },
+  {
+    "match_id": "3405242",
+    "ft_score": "5-2",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.11773216285185184
+  },
+  {
+    "match_id": "3389289",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.21279197344081632
+  },
+  {
+    "match_id": "3389275",
+    "ft_score": "7-2",
+    "T_m": 90.0,
+    "n_events": 22,
+    "n_snapshots": 113,
+    "error": null,
+    "brier_home_win": 0.07778848960357143
+  },
+  {
+    "match_id": "3389283",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.042563096776
+  },
+  {
+    "match_id": "3389273",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.263426810048
+  },
+  {
+    "match_id": "3389285",
+    "ft_score": "1-6",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.0418962845
+  },
+  {
+    "match_id": "3389291",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.2688791502041667
+  },
+  {
+    "match_id": "3402403",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.18388606048163267
+  },
+  {
+    "match_id": "3402401",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08739284422857144
+  },
+  {
+    "match_id": "3402400",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10730843224489799
+  },
+  {
+    "match_id": "3402402",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.056055403824999996
+  },
+  {
+    "match_id": "3405243",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.3047344286375
+  },
+  {
+    "match_id": "3405249",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.1576537130125
+  },
+  {
+    "match_id": "3405248",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.25947777041200004
+  },
+  {
+    "match_id": "3351056",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.16682714323333334
+  },
+  {
+    "match_id": "3351059",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10569139108750002
+  },
+  {
+    "match_id": "3351058",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.28696194008235293
+  },
+  {
+    "match_id": "3351060",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.17978638700784316
+  },
+  {
+    "match_id": "3351064",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09955006074693877
+  },
+  {
+    "match_id": "3379702",
+    "ft_score": "4-3",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.33122003281509427
+  },
+  {
+    "match_id": "3405247",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08329411453061225
+  },
+  {
+    "match_id": "3402398",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.3448594955208333
+  },
+  {
+    "match_id": "3379705",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10814246435744679
+  },
+  {
+    "match_id": "3351057",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.105527841916
+  },
+  {
+    "match_id": "3351061",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.054869909936
+  },
+  {
+    "match_id": "3351067",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08058545171836735
+  },
+  {
+    "match_id": "3351073",
+    "ft_score": "0-4",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.06421929054509803
+  },
+  {
+    "match_id": "3379716",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.066616710525
+  },
+  {
+    "match_id": "3379713",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.12558095193469387
+  },
+  {
+    "match_id": "3379718",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07811851718367346
+  },
+  {
+    "match_id": "3379719",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.03264532046153846
+  },
+  {
+    "match_id": "3379711",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.17143912339183676
+  },
+  {
+    "match_id": "3379714",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.049893246110204084
+  },
+  {
+    "match_id": "3379712",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10436072549999999
+  },
+  {
+    "match_id": "3405303",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.10289827509230769
+  },
+  {
+    "match_id": "3405302",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.047428942216
+  },
+  {
+    "match_id": "3405305",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.15408701159199997
+  },
+  {
+    "match_id": "3405301",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.12383410610612244
+  },
+  {
+    "match_id": "3402411",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.04916213719583334
+  },
+  {
+    "match_id": "3402413",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.2689978158333333
+  },
+  {
+    "match_id": "3351072",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.19091078535294118
+  },
+  {
+    "match_id": "3389298",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.09159714763921568
+  },
+  {
+    "match_id": "3389294",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.4221364037807692
+  },
+  {
+    "match_id": "3402414",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.40179341885833325
+  },
+  {
+    "match_id": "3389304",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.1893231982625
+  },
+  {
+    "match_id": "3389306",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.029327634619607842
+  },
+  {
+    "match_id": "3402416",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.05609217582916667
+  },
+  {
+    "match_id": "3351065",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.22136109134509802
+  },
+  {
+    "match_id": "3389310",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.7752575008461539
+  },
+  {
+    "match_id": "3389296",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.40123457953061226
+  },
+  {
+    "match_id": "3389309",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10244885904897962
+  },
+  {
+    "match_id": "3389302",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10837241872340422
+  },
+  {
+    "match_id": "3405300",
+    "ft_score": "3-4",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.34997148730740735
+  },
+  {
+    "match_id": "3405307",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.09015690361153846
+  },
+  {
+    "match_id": "3405304",
+    "ft_score": "5-2",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.29420059670740745
+  },
+  {
+    "match_id": "3351069",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09071515965714284
+  },
+  {
+    "match_id": "3351066",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.13197972488627452
+  },
+  {
+    "match_id": "3351068",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.11470704111428573
+  },
+  {
+    "match_id": "3351071",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.038976341459999994
+  },
+  {
+    "match_id": "3379715",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09497399925306121
+  },
+  {
+    "match_id": "3402408",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07220812133877552
+  },
+  {
+    "match_id": "3402412",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10830865085531918
+  },
+  {
+    "match_id": "3402417",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.26865149625600004
+  },
+  {
+    "match_id": "3402410",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.074229028704
+  },
+  {
+    "match_id": "3402415",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.08268756640000002
+  },
+  {
+    "match_id": "3379717",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10171140918367345
+  },
+  {
+    "match_id": "3351074",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.038487904649999995
+  },
+  {
+    "match_id": "3351070",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.11879071179215686
+  },
+  {
+    "match_id": "3405306",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.03170309449411765
+  },
+  {
+    "match_id": "3405308",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.604107325323077
+  },
+  {
+    "match_id": "3402409",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.3057309456
+  },
+  {
+    "match_id": "3389312",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10817140898723403
+  },
+  {
+    "match_id": "3389300",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10164348850416667
+  },
+  {
+    "match_id": "3405309",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10819625370212767
+  },
+  {
+    "match_id": "3402427",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.13136906031199996
+  },
+  {
+    "match_id": "3389317",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.086576310972
+  },
+  {
+    "match_id": "3405319",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.06594547347924529
+  },
+  {
+    "match_id": "3379728",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1390292135020408
+  },
+  {
+    "match_id": "3351084",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.10886865105999999
+  },
+  {
+    "match_id": "3379725",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10601908610612244
+  },
+  {
+    "match_id": "3379726",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.22828037349999997
+  },
+  {
+    "match_id": "3389330",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1747392151142857
+  },
+  {
+    "match_id": "3389323",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.04876665573061224
+  },
+  {
+    "match_id": "3389324",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.347819021392
+  },
+  {
+    "match_id": "3389326",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10818720364680852
+  },
+  {
+    "match_id": "3351081",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.08563294074509806
+  },
+  {
+    "match_id": "3351075",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.08977219231666667
+  },
+  {
+    "match_id": "3379721",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.24201251910000005
+  },
+  {
+    "match_id": "3402425",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.0756891225625
+  },
+  {
+    "match_id": "3402418",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.24159203165833332
+  },
+  {
+    "match_id": "3405310",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.050589619964000014
+  },
+  {
+    "match_id": "3402419",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.09391386018823526
+  },
+  {
+    "match_id": "3379720",
+    "ft_score": "5-0",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.0954273058653846
+  },
+  {
+    "match_id": "3379722",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.37065662347199996
+  },
+  {
+    "match_id": "3405316",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.25564740737551017
+  },
+  {
+    "match_id": "3405314",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09557907379591839
+  },
+  {
+    "match_id": "3402423",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.3934225709541667
+  },
+  {
+    "match_id": "3405311",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.17286791326799997
+  },
+  {
+    "match_id": "3405318",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.062800176768
+  },
+  {
+    "match_id": "3405313",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.1103847023576923
+  },
+  {
+    "match_id": "3389332",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1952440607428572
+  },
+  {
+    "match_id": "3402420",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.08442257814166666
+  },
+  {
+    "match_id": "3402424",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.21963371543461538
+  },
+  {
+    "match_id": "3402421",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10816226095744684
+  },
+  {
+    "match_id": "3351080",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.2756639429061224
+  },
+  {
+    "match_id": "3351077",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.054245141828000006
+  },
+  {
+    "match_id": "3351083",
+    "ft_score": "0-4",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.026558285909803924
+  },
+  {
+    "match_id": "3351082",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.13586969741632654
+  },
+  {
+    "match_id": "3351079",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.10189170220000002
+  },
+  {
+    "match_id": "3389315",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10513003667083332
+  },
+  {
+    "match_id": "3379724",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.10657667272800003
+  },
+  {
+    "match_id": "3405315",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09482414459183673
+  },
+  {
+    "match_id": "3402426",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08849551747755104
+  },
+  {
+    "match_id": "3379727",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.13303298834693877
+  },
+  {
+    "match_id": "3351078",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.3779158877428571
+  },
+  {
+    "match_id": "3389328",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.14056013355918365
+  },
+  {
+    "match_id": "3405312",
+    "ft_score": "4-2",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.23090826813962265
+  },
+  {
+    "match_id": "3379723",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.270226699592
+  },
+  {
+    "match_id": "3389319",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07337303632653061
+  },
+  {
+    "match_id": "3389321",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10414447471666666
+  },
+  {
+    "match_id": "3402422",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.12240346139183672
+  },
+  {
+    "match_id": "3405317",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.24417603716603778
+  },
+  {
+    "match_id": "3402432",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.06166032545714286
+  },
+  {
+    "match_id": "3389350",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.11523808794693877
+  },
+  {
+    "match_id": "3379734",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.17081449411428573
+  },
+  {
+    "match_id": "3402428",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1904776247469388
+  },
+  {
+    "match_id": "3379736",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.3101950319680001
+  },
+  {
+    "match_id": "3402434",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.07257417405490195
+  },
+  {
+    "match_id": "3402435",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.16755469081153845
+  },
+  {
+    "match_id": "3351091",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.36052396301199996
+  },
+  {
+    "match_id": "3351090",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.079581456384
+  },
+  {
+    "match_id": "3405322",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.079325061736
+  },
+  {
+    "match_id": "3405320",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.3489530195538461
+  },
+  {
+    "match_id": "3379732",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09453727603265306
+  },
+  {
+    "match_id": "3379735",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.04748747399200001
+  },
+  {
+    "match_id": "3389336",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.060424662876
+  },
+  {
+    "match_id": "3389342",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.47909804439199993
+  },
+  {
+    "match_id": "3389347",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.06517511004166666
+  },
+  {
+    "match_id": "3402429",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.5927763891519999
+  },
+  {
+    "match_id": "3379738",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08682399515510206
+  },
+  {
+    "match_id": "3379729",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.2819208446875
+  },
+  {
+    "match_id": "3405321",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.061650167288000005
+  },
+  {
+    "match_id": "3389344",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10096602614166666
+  },
+  {
+    "match_id": "3402431",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.04754976407307692
+  },
+  {
+    "match_id": "3379733",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1294790025020408
+  },
+  {
+    "match_id": "3351087",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10806234989361703
+  },
+  {
+    "match_id": "3389349",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.246063149348
+  },
+  {
+    "match_id": "3351092",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.633580432176
+  },
+  {
+    "match_id": "3351089",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.11804067970980395
+  },
+  {
+    "match_id": "3351086",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.5444150270857144
+  },
+  {
+    "match_id": "3351094",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.05471055920000001
+  },
+  {
+    "match_id": "3351093",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.055330027179166665
+  },
+  {
+    "match_id": "3379731",
+    "ft_score": "2-4",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.10719838810943397
+  },
+  {
+    "match_id": "3405328",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.07912358516399999
+  },
+  {
+    "match_id": "3405323",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.0937560315375
+  },
+  {
+    "match_id": "3405324",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.16409591422040817
+  },
+  {
+    "match_id": "3402433",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1476174393469388
+  },
+  {
+    "match_id": "3402436",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.3487013006408164
+  },
+  {
+    "match_id": "3405326",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.07778559928846153
+  },
+  {
+    "match_id": "3351088",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.036318755455999996
+  },
+  {
+    "match_id": "3389335",
+    "ft_score": "3-4",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.04372909642307692
+  },
+  {
+    "match_id": "3389345",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.2628639209591837
+  },
+  {
+    "match_id": "3405327",
+    "ft_score": "3-4",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.19618828904230767
+  },
+  {
+    "match_id": "3405325",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.11960692596734693
+  },
+  {
+    "match_id": "3402430",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.09679074034901962
+  },
+  {
+    "match_id": "3389338",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.13191086029795918
+  },
+  {
+    "match_id": "3402437",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.13333242175510204
+  },
+  {
+    "match_id": "3379730",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.09199394850800001
+  },
+  {
+    "match_id": "3389341",
+    "ft_score": "1-4",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.03353905123921569
+  },
+  {
+    "match_id": "3405329",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.20157631285882352
+  },
+  {
+    "match_id": "3405245",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09666491782040813
+  },
+  {
+    "match_id": "3389363",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1617594359020408
+  },
+  {
+    "match_id": "3405440",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10828316119148934
+  },
+  {
+    "match_id": "3402447",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1641448350040816
+  },
+  {
+    "match_id": "3379746",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.3038303675306122
+  },
+  {
+    "match_id": "3351101",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10273960239166668
+  },
+  {
+    "match_id": "3389354",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10830535193191489
+  },
+  {
+    "match_id": "3379740",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.181833452952
+  },
+  {
+    "match_id": "3405439",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10805165628085107
+  },
+  {
+    "match_id": "3379747",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.3561598790470588
+  },
+  {
+    "match_id": "3379744",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.3926108247137255
+  },
+  {
+    "match_id": "3379739",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.09720930635769229
+  },
+  {
+    "match_id": "3379745",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.072356440528
+  },
+  {
+    "match_id": "3389358",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.2600199297576923
+  },
+  {
+    "match_id": "3389356",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.22689191105384615
+  },
+  {
+    "match_id": "3389360",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.08200166948
+  },
+  {
+    "match_id": "3389365",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.4845369707446808
+  },
+  {
+    "match_id": "3405435",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.23508927493877552
+  },
+  {
+    "match_id": "3351100",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.099250828768
+  },
+  {
+    "match_id": "3402439",
+    "ft_score": "5-2",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.17372109445925932
+  },
+  {
+    "match_id": "3402444",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.2781632691125
+  },
+  {
+    "match_id": "3402438",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.08802086970588235
+  },
+  {
+    "match_id": "3402441",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.07921815593469388
+  },
+  {
+    "match_id": "3379743",
+    "ft_score": "5-0",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.06780204819999999
+  },
+  {
+    "match_id": "3351097",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0831090776979592
+  },
+  {
+    "match_id": "3405433",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.062846894168
+  },
+  {
+    "match_id": "3389352",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.23069786140399998
+  },
+  {
+    "match_id": "3389364",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10577031040416666
+  },
+  {
+    "match_id": "3402440",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.05398361100000001
+  },
+  {
+    "match_id": "3402443",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.12139608517142858
+  },
+  {
+    "match_id": "3402442",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.06870909989795919
+  },
+  {
+    "match_id": "3402446",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.14658168271599997
+  },
+  {
+    "match_id": "3402445",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.3578913109461538
+  },
+  {
+    "match_id": "3405432",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0922611196163265
+  },
+  {
+    "match_id": "3405436",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.09383875520392157
+  },
+  {
+    "match_id": "3405434",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.06136068943333334
+  },
+  {
+    "match_id": "3405438",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.05748579546400001
+  },
+  {
+    "match_id": "3389361",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.17707601981249999
+  },
+  {
+    "match_id": "3389362",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09519499975510204
+  },
+  {
+    "match_id": "3379741",
+    "ft_score": "4-3",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.35137660758113215
+  },
+  {
+    "match_id": "3351104",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.203074334904
+  },
+  {
+    "match_id": "3351099",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10283476318775511
+  },
+  {
+    "match_id": "3351102",
+    "ft_score": "1-5",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.028435976901960786
+  },
+  {
+    "match_id": "3405437",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.05519788177916667
+  },
+  {
+    "match_id": "3351095",
+    "ft_score": "4-4",
+    "T_m": 90.0,
+    "n_events": 20,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.13221800815555554
+  },
+  {
+    "match_id": "3351103",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.056496220836000005
+  },
+  {
+    "match_id": "3405441",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10819219496595742
+  },
+  {
+    "match_id": "3379742",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.09366467747599998
+  },
+  {
+    "match_id": "3351096",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.11220940000384615
+  },
+  {
+    "match_id": "3351098",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10335632731836734
+  },
+  {
+    "match_id": "3351110",
+    "ft_score": "3-2",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.5591626603076923
+  },
+  {
+    "match_id": "3351114",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.07224065710416668
+  },
+  {
+    "match_id": "3402455",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.05439955901632653
+  },
+  {
+    "match_id": "3405442",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.05702554948571429
+  },
+  {
+    "match_id": "3379755",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.031608664253061226
+  },
+  {
+    "match_id": "3379753",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.15138991421632655
+  },
+  {
+    "match_id": "3379754",
+    "ft_score": "2-5",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.1120704890074074
+  },
+  {
+    "match_id": "3379757",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.057688289792000004
+  },
+  {
+    "match_id": "3379749",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.3788000217755102
+  },
+  {
+    "match_id": "3379748",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09001771980408163
+  },
+  {
+    "match_id": "3389366",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.06185348325599998
+  },
+  {
+    "match_id": "3389375",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.26860191834166663
+  },
+  {
+    "match_id": "3402456",
+    "ft_score": "4-2",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.4398963422037736
+  },
+  {
+    "match_id": "3402457",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.04778374748163265
+  },
+  {
+    "match_id": "3402450",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.2466704029708334
+  },
+  {
+    "match_id": "3402454",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.2157807181714286
+  },
+  {
+    "match_id": "3379750",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.23785601040769233
+  },
+  {
+    "match_id": "3351107",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.08978324211923075
+  },
+  {
+    "match_id": "3389377",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.2258130171020408
+  },
+  {
+    "match_id": "3389379",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1501577951591837
+  },
+  {
+    "match_id": "3405449",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10818581059574468
+  },
+  {
+    "match_id": "3405445",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.1703098824857143
+  },
+  {
+    "match_id": "3405443",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.08777531548749999
+  },
+  {
+    "match_id": "3405444",
+    "ft_score": "4-2",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.486106570754717
+  },
+  {
+    "match_id": "3405448",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.441247649296
+  },
+  {
+    "match_id": "3405451",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0748733246244898
+  },
+  {
+    "match_id": "3405447",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.127550699684
+  },
+  {
+    "match_id": "3405450",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.20860424134583333
+  },
+  {
+    "match_id": "3405446",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.05545684440800001
+  },
+  {
+    "match_id": "3351113",
+    "ft_score": "4-3",
+    "T_m": 90.0,
+    "n_events": 18,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.24366307892962966
+  },
+  {
+    "match_id": "3351111",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.09625267600416666
+  },
+  {
+    "match_id": "3351112",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.15512196940816325
+  },
+  {
+    "match_id": "3351106",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.061156379824999996
+  },
+  {
+    "match_id": "3351108",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10484876989999999
+  },
+  {
+    "match_id": "3351105",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.16176002580784316
+  },
+  {
+    "match_id": "3402448",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.4722885339372549
+  },
+  {
+    "match_id": "3402452",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.09910032109166668
+  },
+  {
+    "match_id": "3402453",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.07707870880784312
+  },
+  {
+    "match_id": "3379751",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.03266327329803921
+  },
+  {
+    "match_id": "3389371",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10812560931914897
+  },
+  {
+    "match_id": "3389373",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.470929459584
+  },
+  {
+    "match_id": "3402451",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10840745674893616
+  },
+  {
+    "match_id": "3379756",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.09560058429199998
+  },
+  {
+    "match_id": "3389369",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.047487973915384625
+  },
+  {
+    "match_id": "3389378",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.09136472220833332
+  },
+  {
+    "match_id": "3389380",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09354811137551018
+  },
+  {
+    "match_id": "3389367",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.16725815855
+  },
+  {
+    "match_id": "3402449",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.30797807321176474
+  },
+  {
+    "match_id": "3351076",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.2922703930408163
+  },
+  {
+    "match_id": "3389386",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.10375972431428569
+  },
+  {
+    "match_id": "3351124",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.19097296583673468
+  },
+  {
+    "match_id": "3402466",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.2430169453183674
+  },
+  {
+    "match_id": "3379762",
+    "ft_score": "5-3",
+    "T_m": 90.0,
+    "n_events": 20,
+    "n_snapshots": 109,
+    "error": null,
+    "brier_home_win": 0.18559954962222222
+  },
+  {
+    "match_id": "3389387",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10513677134166667
+  },
+  {
+    "match_id": "3379768",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09665096364489797
+  },
+  {
+    "match_id": "3405452",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0940598750489796
+  },
+  {
+    "match_id": "3405460",
+    "ft_score": "0-3",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.08885082849600001
+  },
+  {
+    "match_id": "3405453",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.08311147991020408
+  },
+  {
+    "match_id": "3351115",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.09921529378431374
+  },
+  {
+    "match_id": "3389389",
+    "ft_score": "5-0",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.0792461537
+  },
+  {
+    "match_id": "3389391",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.17398804627916667
+  },
+  {
+    "match_id": "3379764",
+    "ft_score": "3-3",
+    "T_m": 90.0,
+    "n_events": 16,
+    "n_snapshots": 107,
+    "error": null,
+    "brier_home_win": 0.19907976210188683
+  },
+  {
+    "match_id": "3379769",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.11210022258823531
+  },
+  {
+    "match_id": "3379758",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.048135655904
+  },
+  {
+    "match_id": "3379759",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.16428441275200004
+  },
+  {
+    "match_id": "3379760",
+    "ft_score": "4-1",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 105,
+    "error": null,
+    "brier_home_win": 0.17774508273846157
+  },
+  {
+    "match_id": "3402467",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.15525393131836737
+  },
+  {
+    "match_id": "3402463",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.042929111023999995
+  },
+  {
+    "match_id": "3402462",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10557676764166667
+  },
+  {
+    "match_id": "3402465",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.21630759634166666
+  },
+  {
+    "match_id": "3351122",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.6755784573019608
+  },
+  {
+    "match_id": "3389382",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.09488420731249998
+  },
+  {
+    "match_id": "3402458",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.14603151311764706
+  },
+  {
+    "match_id": "3389384",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10827710861702126
+  },
+  {
+    "match_id": "3402461",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.05275248930204081
+  },
+  {
+    "match_id": "3402460",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.39162369403921565
+  },
+  {
+    "match_id": "3402464",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0883543876489796
+  },
+  {
+    "match_id": "3351118",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.07684864663600001
+  },
+  {
+    "match_id": "3351123",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.045429869419607846
+  },
+  {
+    "match_id": "3351121",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.19459566153061222
+  },
+  {
+    "match_id": "3351117",
+    "ft_score": "0-1",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.10525289550833335
+  },
+  {
+    "match_id": "3405455",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.28456386220399993
+  },
+  {
+    "match_id": "3405458",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.11361747206938776
+  },
+  {
+    "match_id": "3405459",
+    "ft_score": "4-0",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.17991071669411765
+  },
+  {
+    "match_id": "3389390",
+    "ft_score": "2-3",
+    "T_m": 90.0,
+    "n_events": 14,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.34863987898823534
+  },
+  {
+    "match_id": "3389381",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.07537902078000001
+  },
+  {
+    "match_id": "3379767",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.18389443841632652
+  },
+  {
+    "match_id": "3405457",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.05062732877647058
+  },
+  {
+    "match_id": "3351119",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.062061094077551025
+  },
+  {
+    "match_id": "3351116",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.152078774532
+  },
+  {
+    "match_id": "3351120",
+    "ft_score": "3-0",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.17306510944000003
+  },
+  {
+    "match_id": "3405454",
+    "ft_score": "1-0",
+    "T_m": 90.0,
+    "n_events": 6,
+    "n_snapshots": 97,
+    "error": null,
+    "brier_home_win": 0.24422892801666665
+  },
+  {
+    "match_id": "3379761",
+    "ft_score": "0-0",
+    "T_m": 90.0,
+    "n_events": 4,
+    "n_snapshots": 95,
+    "error": null,
+    "brier_home_win": 0.10808881037872342
+  },
+  {
+    "match_id": "3389392",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.21144915487200006
+  },
+  {
+    "match_id": "3389388",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.05578981338399999
+  },
+  {
+    "match_id": "3405461",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.15931601222352942
+  },
+  {
+    "match_id": "3405456",
+    "ft_score": "1-2",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.049789741195999986
+  },
+  {
+    "match_id": "3402459",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.0812521366857143
+  },
+  {
+    "match_id": "3351132",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09008109930612244
+  },
+  {
+    "match_id": "3379778",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.40466790777254913
+  },
+  {
+    "match_id": "3402469",
+    "ft_score": "0-2",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09305865620408163
+  },
+  {
+    "match_id": "3389398",
+    "ft_score": "2-0",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.09567028019183671
+  },
+  {
+    "match_id": "3379780",
+    "ft_score": "2-2",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.14564316449411766
+  },
+  {
+    "match_id": "3379784",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.123306634504
+  },
+  {
+    "match_id": "3379777",
+    "ft_score": "1-1",
+    "T_m": 90.0,
+    "n_events": 8,
+    "n_snapshots": 99,
+    "error": null,
+    "brier_home_win": 0.19809832620816328
+  },
+  {
+    "match_id": "3389396",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.3231757305079999
+  },
+  {
+    "match_id": "3389402",
+    "ft_score": "1-3",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.1738005612470588
+  },
+  {
+    "match_id": "3405465",
+    "ft_score": "2-1",
+    "T_m": 90.0,
+    "n_events": 10,
+    "n_snapshots": 101,
+    "error": null,
+    "brier_home_win": 0.623021458912
+  },
+  {
+    "match_id": "3405464",
+    "ft_score": "3-1",
+    "T_m": 90.0,
+    "n_events": 12,
+    "n_snapshots": 103,
+    "error": null,
+    "brier_home_win": 0.13632197113333336
   }
 ]
